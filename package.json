@@ -1,5 +1,5 @@
 {
-  "name": "jsboilerplate",
+  "name": "smail",
   "version": "1.0.0",
   "description": "Simple project starting structure, using webpack and babel to compile js 2015 to browser",
   "main": "index.js",
