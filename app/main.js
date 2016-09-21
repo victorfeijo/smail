@@ -1,18 +1,43 @@
-class Foo {
-  constructor(some) {
-    this.some = some
+class Event {
+  constructor(execute, service) {
+    this.execute = execute
+    this.service = service
   }
 
-  log() {
-    console.log(this.some)
+  finishTime() {
+    return this.execute + this.service
   }
 
-  alert() {
-    alert(this.some)
+  run() {
   }
 }
 
-let foo = new Foo('Foo')
-document.getElementById('alert').addEventListener('click', foo.alert.bind(foo))
-document.getElementById('log').addEventListener('click', foo.log.bind(foo))
+class Simulator {
+  constructor() {
+    this.eventQueue = new Array()
+  }
 
+  generateEvents() {
+    for(let i=0; i<100; i++) {
+      this.eventQueue.push(new Event(Math.random()*15, Math.random()*15))
+    }
+  }
+
+  start() {
+    let currentTime = 0
+
+    this.generateEvents()
+
+    this.eventQueue.forEach((event, i) => {
+      currentTime += event.finishTime()
+      // $("#testanu").html( `Tempo Atual: ${currentTime}` )
+    })
+
+    $("#currentTime").html( `Tempo Atual: ${currentTime}` )
+  }
+}
+
+$('#alert').click(() => { 
+  let sim = new Simulator()
+  sim.start()
+})
