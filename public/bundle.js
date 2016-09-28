@@ -44,47 +44,70 @@
 /* 0 */
 /***/ function(module, exports) {
 
-	'use strict';
+	"use strict";
 	
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 	
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 	
-	var Foo = function () {
-	  function Foo(some) {
-	    _classCallCheck(this, Foo);
+	var Event = function () {
+	  function Event(execute, service) {
+	    _classCallCheck(this, Event);
 	
-	    this.some = some;
+	    this.execute = execute;
+	    this.service = service;
 	  }
 	
-	  _createClass(Foo, [{
-	    key: 'log',
-	    value: function log() {
-	      console.log(this.some);
+	  _createClass(Event, [{
+	    key: "finishTime",
+	    value: function finishTime() {
+	      return this.execute + this.service;
 	    }
 	  }, {
-	    key: 'alert',
-	    value: function (_alert) {
-	      function alert() {
-	        return _alert.apply(this, arguments);
-	      }
-	
-	      alert.toString = function () {
-	        return _alert.toString();
-	      };
-	
-	      return alert;
-	    }(function () {
-	      alert(this.some);
-	    })
+	    key: "run",
+	    value: function run() {}
 	  }]);
 	
-	  return Foo;
+	  return Event;
 	}();
 	
-	var foo = new Foo('Foo');
-	document.getElementById('alert').addEventListener('click', foo.alert.bind(foo));
-	document.getElementById('log').addEventListener('click', foo.log.bind(foo));
+	var Simulator = function () {
+	  function Simulator() {
+	    _classCallCheck(this, Simulator);
+	
+	    this.eventQueue = new Array();
+	  }
+	
+	  _createClass(Simulator, [{
+	    key: "generateEvents",
+	    value: function generateEvents() {
+	      for (var i = 0; i < 100; i++) {
+	        this.eventQueue.push(new Event(Math.random() * 15, Math.random() * 15));
+	      }
+	    }
+	  }, {
+	    key: "start",
+	    value: function start() {
+	      var currentTime = 0;
+	
+	      this.generateEvents();
+	
+	      this.eventQueue.forEach(function (event, i) {
+	        currentTime += event.finishTime();
+	        // $("#testanu").html( `Tempo Atual: ${currentTime}` )
+	      });
+	
+	      $("#currentTime").html("Tempo Atual: " + currentTime);
+	    }
+	  }]);
+	
+	  return Simulator;
+	}();
+	
+	$('#alert').click(function () {
+	  var sim = new Simulator();
+	  sim.start();
+	});
 
 /***/ }
 /******/ ]);
