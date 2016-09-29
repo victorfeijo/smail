@@ -1,43 +1,91 @@
-class Event {
-  constructor(execute, service) {
-    this.execute = execute
-    this.service = service
-  }
+import Simulator from './Simulator'
 
-  finishTime() {
-    return this.execute + this.service
-  }
-
-  run() {
+let trafficVolumn = () => {
+  return {
+    ll: $('#trafficVolumnLL').val(),
+    rr: $('#trafficVolumnRR').val(),
+    lr: $('#trafficVolumnLR').val(),
+    rl: $('#trafficVolumnRL').val()
   }
 }
 
-class Simulator {
-  constructor() {
-    this.eventQueue = new Array()
-  }
-
-  generateEvents() {
-    for(let i=0; i<100; i++) {
-      this.eventQueue.push(new Event(Math.random()*15, Math.random()*15))
+let sfaTaxs = () => {
+  return {
+    sucess: {
+      ll: $('#sTaxsLL').val(),
+      rr: $('#sTaxsRR').val(),
+      lr: $('#sTaxsLR').val(),
+      rl: $('#sTaxsRL').val(),
+    },
+    failure: {
+      ll: $('#fTaxsLL').val(),
+      rr: $('#fTaxsRR').val(),
+      lr: $('#fTaxsLR').val(),
+      rl: $('#fTaxsRL').val(),
+    },
+    indentation: {
+      ll: $('#aTaxsLL').val(),
+      rr: $('#aTaxsRR').val(),
+      lr: $('#aTaxsLR').val(),
+      rl: $('#aTaxsRL').val(),
     }
   }
+}
 
-  start() {
-    let currentTime = 0
-
-    this.generateEvents()
-
-    this.eventQueue.forEach((event, i) => {
-      currentTime += event.finishTime()
-      // $("#testanu").html( `Tempo Atual: ${currentTime}` )
-    })
-
-    $("#currentTime").html( `Tempo Atual: ${currentTime}` )
+let serviceCenter = () => {
+  return {
+    center1: $('#serviceCenter1').val(),
+    center2: $('#serviceCenter2').val()
   }
 }
 
-$('#alert').click(() => { 
+let arriveTime = () => {
+  return {
+    local: $('#arriveTime1').val(),
+    remote: $('#arriveTime2').val()
+  }
+}
+
+let serviceTime = () => {
+  return {
+    reception: {
+      lls: $('#receptionCenterLLS').val(),
+      llf: $('#receptionCenterLLF').val(),
+      lla: $('#receptionCenterLLA').val(),
+      lrs: $('#receptionCenterLRS').val(),
+      lrf: $('#receptionCenterLRF').val(),
+      lra: $('#receptionCenterLRA').val(),
+      rls: $('#receptionCenterRLS').val(),
+      rlf: $('#receptionCenterRLF').val(),
+      rla: $('#receptionCenterRLA').val(),
+      rrs: $('#receptionCenterRRS').val(),
+      rrf: $('#receptionCenterRRF').val(),
+      rra: $('#receptionCenterRRA').val(),
+    },
+    service: {
+      lls: $('#serviceCenterLLS').val(),
+      llf: $('#serviceCenterLLF').val(),
+      lla: $('#serviceCenterLLA').val(),
+      lrs: $('#serviceCenterLRS').val(),
+      lrf: $('#serviceCenterLRF').val(),
+      lra: $('#serviceCenterLRA').val(),
+      rls: $('#serviceCenterRLS').val(),
+      rlf: $('#serviceCenterRLF').val(),
+      rla: $('#serviceCenterRLA').val(),
+      rrs: $('#serviceCenterRRS').val(),
+      rrf: $('#serviceCenterRRF').val(),
+      rra: $('#serviceCenterRRA').val(),
+    }
+  }
+}
+
+$('#alert').click(() => {
   let sim = new Simulator()
   sim.start()
+
+  console.log(trafficVolumn())
+  console.log(sfaTaxs())
+  console.log(serviceCenter())
+  console.log(arriveTime())
+  console.log(serviceTime())
 })
