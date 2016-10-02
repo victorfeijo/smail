@@ -52,8 +52,6 @@
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
-	var test = 10;
-	
 	var trafficVolumn = function trafficVolumn() {
 	  return {
 	    ll: $('#trafficVolumnLL').val(),
@@ -137,8 +135,6 @@
 	  var sim = new _Simulator2.default();
 	  sim.start();
 	
-	  console.log(test);
-	
 	  console.log(trafficVolumn());
 	  console.log(sfaTaxs());
 	  console.log(serviceCenter());
@@ -185,7 +181,6 @@
 	    value: function start() {
 	      var currentTime = 0;
 	
-	      console.log(test);
 	      this.generateEvents();
 	
 	      this.eventQueue.forEach(function (event, i) {
