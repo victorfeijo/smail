@@ -1,27 +1,26 @@
-import Event from './Event'
+import EventMessage from './EventMessage'
+import EventQueue from './EventQueue'
 
 class Simulator {
   constructor() {
-    this.eventQueue = new Array()
-  }
-
-  generateEvents() {
-    for(let i=0; i<100; i++) {
-      this.eventQueue.push(new Event(Math.random()*15, Math.random()*15))
-    }
+    this.eventQueue = new EventQueue()
   }
 
   start() {
-    let currentTime = 0
+    this.eventQueue.add(new EventMessage(Math.random()*15, Math.random()*15))
+    this.eventQueue.add(new EventMessage(Math.random()*15, Math.random()*15))
+    this.eventQueue.add(new EventMessage(Math.random()*15, Math.random()*15))
+    this.eventQueue.add(new EventMessage(Math.random()*15, Math.random()*15))
 
-    this.generateEvents()
+    console.log(this.eventQueue.queue)
+    this.eventQueue.next()
+    console.log(this.eventQueue.queue)
+    this.eventQueue.next()
+    this.eventQueue.next()
+    console.log(this.eventQueue.queue)
+    this.eventQueue.next()
 
-    this.eventQueue.forEach((event, i) => {
-      currentTime += event.finishTime()
-      // $("#testanu").html( `Tempo Atual: ${currentTime}` )
-    })
-
-    $("#currentTime").html( `Tempo Atual: ${currentTime}` )
+    console.log(this.eventQueue.queue)
   }
 }
 

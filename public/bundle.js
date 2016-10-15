@@ -146,7 +146,7 @@
 /* 1 */
 /***/ function(module, exports, __webpack_require__) {
 
-	"use strict";
+	'use strict';
 	
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
@@ -154,9 +154,13 @@
 	
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 	
-	var _Event = __webpack_require__(2);
+	var _EventMessage = __webpack_require__(2);
 	
-	var _Event2 = _interopRequireDefault(_Event);
+	var _EventMessage2 = _interopRequireDefault(_EventMessage);
+	
+	var _EventQueue = __webpack_require__(4);
+	
+	var _EventQueue2 = _interopRequireDefault(_EventQueue);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
@@ -166,29 +170,26 @@
 	  function Simulator() {
 	    _classCallCheck(this, Simulator);
 	
-	    this.eventQueue = new Array();
+	    this.eventQueue = new _EventQueue2.default();
 	  }
 	
 	  _createClass(Simulator, [{
-	    key: "generateEvents",
-	    value: function generateEvents() {
-	      for (var i = 0; i < 100; i++) {
-	        this.eventQueue.push(new _Event2.default(Math.random() * 15, Math.random() * 15));
-	      }
-	    }
-	  }, {
-	    key: "start",
+	    key: 'start',
 	    value: function start() {
-	      var currentTime = 0;
+	      this.eventQueue.add(new _EventMessage2.default(Math.random() * 15, Math.random() * 15));
+	      this.eventQueue.add(new _EventMessage2.default(Math.random() * 15, Math.random() * 15));
+	      this.eventQueue.add(new _EventMessage2.default(Math.random() * 15, Math.random() * 15));
+	      this.eventQueue.add(new _EventMessage2.default(Math.random() * 15, Math.random() * 15));
 	
-	      this.generateEvents();
+	      console.log(this.eventQueue.queue);
+	      this.eventQueue.next();
+	      console.log(this.eventQueue.queue);
+	      this.eventQueue.next();
+	      this.eventQueue.next();
+	      console.log(this.eventQueue.queue);
+	      this.eventQueue.next();
 	
-	      this.eventQueue.forEach(function (event, i) {
-	        currentTime += event.finishTime();
-	        // $("#testanu").html( `Tempo Atual: ${currentTime}` )
-	      });
-	
-	      $("#currentTime").html("Tempo Atual: " + currentTime);
+	      console.log(this.eventQueue.queue);
 	    }
 	  }]);
 	
@@ -199,6 +200,68 @@
 
 /***/ },
 /* 2 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	
+	var _Enum = __webpack_require__(3);
+	
+	var _EventQueue = __webpack_require__(4);
+	
+	var _EventQueue2 = _interopRequireDefault(_EventQueue);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	var EventMessage = function () {
+	  function EventMessage(execTime, servTime) {
+	    _classCallCheck(this, EventMessage);
+	
+	    this.execTime = execTime;
+	    this.servTime = servTime;
+	    this.state = _Enum.MessageState.RECEPTION;
+	  }
+	
+	  _createClass(EventMessage, [{
+	    key: 'finishTime',
+	    value: function finishTime() {
+	      return this.execTime + this.servTime;
+	    }
+	  }, {
+	    key: 'run',
+	    value: function run() {}
+	  }]);
+	
+	  return EventMessage;
+	}();
+	
+	exports.default = EventMessage;
+
+/***/ },
+/* 3 */
+/***/ function(module, exports) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	var MessageState = exports.MessageState = {
+	  RECEPTION: 'RECEPTION',
+	  SERVICE: 'SERVICE',
+	  WAITING: 'WAITING',
+	  LEAVING: 'LEAVING'
+	};
+
+/***/ },
+/* 4 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -211,28 +274,39 @@
 	
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 	
-	var Event = function () {
-	  function Event(execute, service) {
-	    _classCallCheck(this, Event);
+	var EventQueue = function () {
+	  function EventQueue() {
+	    _classCallCheck(this, EventQueue);
 	
-	    this.execute = execute;
-	    this.service = service;
+	    this.queue = new Array();
 	  }
 	
-	  _createClass(Event, [{
-	    key: "finishTime",
-	    value: function finishTime() {
-	      return this.execute + this.service;
+	  _createClass(EventQueue, [{
+	    key: "add",
+	    value: function add(event) {
+	      for (var i = 0; i < this.queue.length; i++) {
+	        if (event.execTime < this.queue[i].execTime) {
+	          this.queue.splice(i, 0, event);
+	
+	          return;
+	        }
+	      }
+	
+	      this.queue.push(event);
 	    }
 	  }, {
-	    key: "run",
-	    value: function run() {}
+	    key: "next",
+	    value: function next() {
+	      if (this.queue.length > 0) {
+	        return this.queue.pop();
+	      }
+	    }
 	  }]);
 	
-	  return Event;
+	  return EventQueue;
 	}();
 	
-	exports.default = Event;
+	exports.default = EventQueue;
 
 /***/ }
 /******/ ]);
