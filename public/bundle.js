@@ -162,6 +162,8 @@
 	
 	var _EventQueue2 = _interopRequireDefault(_EventQueue);
 	
+	var _Calculus = __webpack_require__(5);
+	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -180,6 +182,8 @@
 	      this.eventQueue.add(new _EventMessage2.default(Math.random() * 15, Math.random() * 15));
 	      this.eventQueue.add(new _EventMessage2.default(Math.random() * 15, Math.random() * 15));
 	      this.eventQueue.add(new _EventMessage2.default(Math.random() * 15, Math.random() * 15));
+	
+	      console.log(_Calculus.Distribution.normal(2, 2));
 	
 	      console.log(this.eventQueue.queue);
 	      this.eventQueue.next();
@@ -307,6 +311,31 @@
 	}();
 	
 	exports.default = EventQueue;
+
+/***/ },
+/* 5 */
+/***/ function(module, exports) {
+
+	"use strict";
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	var Distribution = exports.Distribution = {
+	  normal: function normal(x, y) {
+	    // normal logic function here, with x y params
+	    return x + y;
+	  },
+	  uniform: function uniform(x, y) {
+	    // uniform logic function here, with x y params
+	  },
+	  triangular: function triangular(x, y, z) {
+	    // triangular logic function here, with x y z params
+	  },
+	  expo: function expo(x) {
+	    // expo logic function here, with x params
+	  }
+	};
 
 /***/ }
 /******/ ]);

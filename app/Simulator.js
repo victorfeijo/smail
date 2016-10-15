@@ -1,5 +1,6 @@
 import EventMessage from './EventMessage'
 import EventQueue from './EventQueue'
+import { Distribution } from './Calculus'
 
 class Simulator {
   constructor() {
