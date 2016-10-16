@@ -17,8 +17,16 @@ class EventQueue {
 
   next() {
     if (this.queue.length > 0) {
-      return this.queue.pop()
+      return this.queue.shift()
     }
+  }
+
+  isEmpty() {
+    return this.queue.length === 0
+  }
+
+  map(func) {
+    return this.queue.map(func)
   }
 }
 

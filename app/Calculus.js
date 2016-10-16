@@ -1,14 +1,29 @@
 export const Distribution = {
-  normal: (x, y) => {
-    // normal logic function here, with x y params
+  normal: (a, b) => {
+    const u1 = Math.random()
+    const u2 = Math.random()
+
+    const z = Math.sqrt(-2 * Math.log(u1)) * Math.sin(2*180*u2)
+
+    return a + b*z
   },
-  uniform: (x, y) => {
-    // uniform logic function here, with x y params
+  uniform: (a, b) => {
+    const u = Math.random()
+
+    return a + u*(b-a)
   },
-  triangular: (x, y, z) => {
-    // triangular logic function here, with x y z params
+  triangular: (a, b, c) => {
+    const u = Math.random()
+
+    if (u <= (b-a)/(c-a)) {
+      return a + Math.sqrt(u * (b-a) * (c-a))
+    }
+
+    return a - Math.sqrt((1-u) * (c-b) * (c-a))
   },
-  expo: (x) => {
-    // expo logic function here, with x params
+  expo: (l) => {
+    const u = Math.random()
+
+    return (-1/l) * Math.log(1-u)
   },
 }

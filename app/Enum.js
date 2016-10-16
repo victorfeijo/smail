@@ -2,5 +2,12 @@ export const MessageState = {
   RECEPTION: 'RECEPTION',
   SERVICE: 'SERVICE',
   WAITING: 'WAITING',
-  LEAVING: 'LEAVING',
+  FINISH: 'FINISH',
+}
+
+export const MessageType = {
+  LL: 'LL',
+  LR: 'LR',
+  RL: 'RL',
+  RR: 'RR'
 }

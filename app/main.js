@@ -1,4 +1,5 @@
 import Simulator from './Simulator'
+import { Distribution } from './Calculus'
 
 let trafficVolumn = () => {
   return {
@@ -88,4 +89,9 @@ $('#alert').click(() => {
   console.log(serviceCenter())
   console.log(arriveTime())
   console.log(serviceTime())
+
+  console.log(Distribution.normal(5, 15))
+  console.log(Distribution.uniform(5, 15))
+  console.log(Distribution.triangular(5, 10, 15))
+  console.log(Distribution.expo(15))
 })

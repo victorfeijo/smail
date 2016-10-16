@@ -50,6 +50,8 @@
 	
 	var _Simulator2 = _interopRequireDefault(_Simulator);
 	
+	var _Calculus = __webpack_require__(7);
+	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
 	var trafficVolumn = function trafficVolumn() {
@@ -140,6 +142,11 @@
 	  console.log(serviceCenter());
 	  console.log(arriveTime());
 	  console.log(serviceTime());
+	
+	  console.log(_Calculus.Distribution.normal(5, 15));
+	  console.log(_Calculus.Distribution.uniform(5, 15));
+	  console.log(_Calculus.Distribution.triangular(5, 10, 15));
+	  console.log(_Calculus.Distribution.expo(15));
 	});
 
 /***/ },
@@ -162,7 +169,17 @@
 	
 	var _EventQueue2 = _interopRequireDefault(_EventQueue);
 	
-	var _Calculus = __webpack_require__(5);
+	var _ServiceCenter = __webpack_require__(5);
+	
+	var _ServiceCenter2 = _interopRequireDefault(_ServiceCenter);
+	
+	var _Reception = __webpack_require__(6);
+	
+	var _Reception2 = _interopRequireDefault(_Reception);
+	
+	var _Calculus = __webpack_require__(7);
+	
+	var _Enum = __webpack_require__(3);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
@@ -173,27 +190,34 @@
 	    _classCallCheck(this, Simulator);
 	
 	    this.eventQueue = new _EventQueue2.default();
+	    this.localServiceCenter = new _ServiceCenter2.default(this.eventQueue);
+	    this.remoteServiceCenter = new _ServiceCenter2.default(this.eventQueue);
+	    this.receptionCenter = new _Reception2.default(this.eventQueue);
+	    this.currentTime = 0;
 	  }
 	
 	  _createClass(Simulator, [{
+	    key: 'generateEvents',
+	    value: function generateEvents(n) {
+	      var arrival = 0;
+	
+	      for (var i = 0; i < n; i++) {
+	        this.eventQueue.add(new _EventMessage2.default(i, arrival, _Calculus.Distribution.uniform(5, 9), _Enum.MessageType.LL, _Enum.MessageState.RECEPTION));
+	        arrival += _Calculus.Distribution.uniform(7, 12);
+	      }
+	    }
+	  }, {
 	    key: 'start',
 	    value: function start() {
-	      this.eventQueue.add(new _EventMessage2.default(Math.random() * 15, Math.random() * 15));
-	      this.eventQueue.add(new _EventMessage2.default(Math.random() * 15, Math.random() * 15));
-	      this.eventQueue.add(new _EventMessage2.default(Math.random() * 15, Math.random() * 15));
-	      this.eventQueue.add(new _EventMessage2.default(Math.random() * 15, Math.random() * 15));
+	      this.generateEvents(5);
 	
-	      console.log(_Calculus.Distribution.normal(2, 2));
+	      while (!this.eventQueue.isEmpty()) {
+	        var nextEvent = this.eventQueue.next();
 	
-	      console.log(this.eventQueue.queue);
-	      this.eventQueue.next();
-	      console.log(this.eventQueue.queue);
-	      this.eventQueue.next();
-	      this.eventQueue.next();
-	      console.log(this.eventQueue.queue);
-	      this.eventQueue.next();
+	        console.log('message ' + nextEvent.id + ' status => ' + nextEvent.state + ' execTime => ' + nextEvent.execTime);
 	
-	      console.log(this.eventQueue.queue);
+	        nextEvent.run(this.receptionCenter, this.localServiceCenter, this.remoteServiceCenter);
+	      }
 	    }
 	  }]);
 	
@@ -225,22 +249,29 @@
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 	
 	var EventMessage = function () {
-	  function EventMessage(execTime, servTime) {
+	  function EventMessage(id, execTime, servTime, type, state) {
 	    _classCallCheck(this, EventMessage);
 	
+	    this.id = id;
 	    this.execTime = execTime;
 	    this.servTime = servTime;
-	    this.state = _Enum.MessageState.RECEPTION;
+	    this.type = type;
+	    this.state = state;
 	  }
 	
 	  _createClass(EventMessage, [{
-	    key: 'finishTime',
-	    value: function finishTime() {
-	      return this.execTime + this.servTime;
-	    }
-	  }, {
 	    key: 'run',
-	    value: function run() {}
+	    value: function run(receptionCenter, localServiceCenter, removeServiceCenter) {
+	      if (this.state === _Enum.MessageState.RECEPTION) {
+	        receptionCenter.receive(this);
+	      } else if (this.state === _Enum.MessageState.SERVICE) {
+	        if (this.type === _Enum.MessageType.LL || this.type === Messagetype.RL) {
+	          localServiceCenter.receive(this);
+	        } else {
+	          remoteServiceCenter.receive(this);
+	        }
+	      } else if (this.state === _Enum.MessageState.FINISH) {}
+	    }
 	  }]);
 	
 	  return EventMessage;
@@ -261,7 +292,14 @@
 	  RECEPTION: 'RECEPTION',
 	  SERVICE: 'SERVICE',
 	  WAITING: 'WAITING',
-	  LEAVING: 'LEAVING'
+	  FINISH: 'FINISH'
+	};
+	
+	var MessageType = exports.MessageType = {
+	  LL: 'LL',
+	  LR: 'LR',
+	  RL: 'RL',
+	  RR: 'RR'
 	};
 
 /***/ },
@@ -302,8 +340,18 @@
 	    key: "next",
 	    value: function next() {
 	      if (this.queue.length > 0) {
-	        return this.queue.pop();
+	        return this.queue.shift();
 	      }
+	    }
+	  }, {
+	    key: "isEmpty",
+	    value: function isEmpty() {
+	      return this.queue.length === 0;
+	    }
+	  }, {
+	    key: "map",
+	    value: function map(func) {
+	      return this.queue.map(func);
 	    }
 	  }]);
 	
@@ -314,6 +362,92 @@
 
 /***/ },
 /* 5 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	
+	var _EventMessage = __webpack_require__(2);
+	
+	var _EventMessage2 = _interopRequireDefault(_EventMessage);
+	
+	var _Enum = __webpack_require__(3);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	var ServiceCenter = function () {
+	  function ServiceCenter(eventQueue) {
+	    _classCallCheck(this, ServiceCenter);
+	
+	    this.eventQueue = eventQueue;
+	  }
+	
+	  _createClass(ServiceCenter, [{
+	    key: 'receive',
+	    value: function receive(eventMessage) {
+	      this.eventQueue.add(new _EventMessage2.default(eventMessage.id, eventMessage.servTime + eventMessage.execTime, 0, eventMessage.type, _Enum.MessageState.FINISH));
+	    }
+	  }]);
+	
+	  return ServiceCenter;
+	}();
+	
+	exports.default = ServiceCenter;
+
+/***/ },
+/* 6 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	
+	var _ServiceCenter = __webpack_require__(5);
+	
+	var _ServiceCenter2 = _interopRequireDefault(_ServiceCenter);
+	
+	var _EventMessage = __webpack_require__(2);
+	
+	var _EventMessage2 = _interopRequireDefault(_EventMessage);
+	
+	var _Enum = __webpack_require__(3);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	var Reception = function () {
+	  function Reception(eventQueue) {
+	    _classCallCheck(this, Reception);
+	
+	    this.eventQueue = eventQueue;
+	  }
+	
+	  _createClass(Reception, [{
+	    key: 'receive',
+	    value: function receive(eventMessage) {
+	      this.eventQueue.add(new _EventMessage2.default(eventMessage.id, eventMessage.execTime + eventMessage.servTime, eventMessage.servTime, eventMessage.type, _Enum.MessageState.SERVICE));
+	    }
+	  }]);
+	
+	  return Reception;
+	}();
+	
+	exports.default = Reception;
+
+/***/ },
+/* 7 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -322,18 +456,32 @@
 	  value: true
 	});
 	var Distribution = exports.Distribution = {
-	  normal: function normal(x, y) {
-	    // normal logic function here, with x y params
-	    return x + y;
+	  normal: function normal(a, b) {
+	    var u1 = Math.random();
+	    var u2 = Math.random();
+	
+	    var z = Math.sqrt(-2 * Math.log(u1)) * Math.sin(2 * 180 * u2);
+	
+	    return a + b * z;
 	  },
-	  uniform: function uniform(x, y) {
-	    // uniform logic function here, with x y params
+	  uniform: function uniform(a, b) {
+	    var u = Math.random();
+	
+	    return a + u * (b - a);
 	  },
-	  triangular: function triangular(x, y, z) {
-	    // triangular logic function here, with x y z params
+	  triangular: function triangular(a, b, c) {
+	    var u = Math.random();
+	
+	    if (u <= (b - a) / (c - a)) {
+	      return a + Math.sqrt(u * (b - a) * (c - a));
+	    }
+	
+	    return a - Math.sqrt((1 - u) * (c - b) * (c - a));
 	  },
-	  expo: function expo(x) {
-	    // expo logic function here, with x params
+	  expo: function expo(l) {
+	    var u = Math.random();
+	
+	    return -1 / l * Math.log(1 - u);
 	  }
 	};
 
