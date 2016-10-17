@@ -92,15 +92,15 @@
 	
 	var serviceCenter = function serviceCenter() {
 	  return {
-	    center1: $('#serviceCenter1').val(),
-	    center2: $('#serviceCenter2').val()
+	    center1: parseFloat($('#serviceCenter1').val()),
+	    center2: parseFloat($('#serviceCenter2').val())
 	  };
 	};
 	
 	var arriveTime = function arriveTime() {
 	  return {
-	    local: $('#arriveTime1').val(),
-	    remote: $('#arriveTime2').val()
+	    local: parseFloat($('#arriveTime1').val()),
+	    remote: parseFloat($('#arriveTime2').val())
 	  };
 	};
 	
@@ -192,8 +192,8 @@
 	  }
 	
 	  _createClass(Simulator, [{
-	    key: 'rateMessageType',
-	    value: function rateMessageType() {
+	    key: 'sortMessageType',
+	    value: function sortMessageType() {
 	      var ll = this.config.trafficVolumn.ll;
 	      var lr = this.config.trafficVolumn.lr;
 	      var rl = this.config.trafficVolumn.rl;
@@ -213,21 +213,20 @@
 	      return _Enum.MessageType.RR;
 	    }
 	  }, {
-	    key: 'generateEvents',
-	    value: function generateEvents(n) {
-	      var arrival = 0;
-	
-	      for (var i = 0; i < n; i++) {
-	        this.eventQueue.add(new _EventMessage2.default(i, arrival, _Calculus.Distribution.uniform(5, 9), this.rateMessageType(), _Enum.MessageState.RECEPTION, this.config.sfaTaxs));
-	
-	        arrival += _Calculus.Distribution.uniform(0, 1);
-	      }
+	    key: 'generateMessage',
+	    value: function generateMessage() {
+	      var messageType = this.sortMessageType();
+	      var arrive = messageType.charAt(1) === 'L' ? _Calculus.Distribution.expo(this.config.arriveTime.local) : _Calculus.Distribution.expo(this.config.arriveTime.remote);
+	      var message = new _EventMessage2.default(++this.lastMessage.id, this.lastMessage.execTime + arrive, _Calculus.Distribution.uniform(5, 9), messageType, _Enum.MessageState.RECEPTION, this.config.sfaTaxs);
+	      this.eventQueue.add(message);
+	      this.lastMessage = message;
 	    }
 	  }, {
 	    key: 'start',
 	    value: function start() {
-	      this.generateEvents(120);
+	      this.lastMessage = new _EventMessage2.default(0, 0, _Calculus.Distribution.uniform(5, 9), this.sortMessageType(), _Enum.MessageState.RECEPTION, this.config.sfaTaxs);
 	
+	      this.eventQueue.add(this.lastMessage);
 	      this.run();
 	    }
 	  }, {
@@ -235,13 +234,16 @@
 	    value: function run() {
 	      var _this = this;
 	
-	      if (this.eventQueue.isEmpty()) {
+	      if (this.eventQueue.isEmpty() || this.currentTime > 1000) {
 	        this.finish();
 	
 	        return;
 	      }
 	
+	      this.generateMessage();
+	
 	      var nextEvent = this.eventQueue.next();
+	      this.currentTime = nextEvent.execTime;
 	
 	      nextEvent.run(this.receptionCenter, this.localServiceCenter, this.remoteServiceCenter);
 	
@@ -611,7 +613,7 @@
 	      return a + Math.sqrt(u * (b - a) * (c - a));
 	    }
 	
-	    return a - Math.sqrt((1 - u) * (c - b) * (c - a));
+	    return c - Math.sqrt((1 - u) * (c - b) * (c - a));
 	  },
 	  expo: function expo(l) {
 	    var u = Math.random();

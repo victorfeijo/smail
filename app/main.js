@@ -36,15 +36,15 @@ let sfaTaxs = () => {
 
 let serviceCenter = () => {
   return {
-    center1: $('#serviceCenter1').val(),
-    center2: $('#serviceCenter2').val()
+    center1: parseFloat($('#serviceCenter1').val()),
+    center2: parseFloat($('#serviceCenter2').val()),
   }
 }
 
 let arriveTime = () => {
   return {
-    local: $('#arriveTime1').val(),
-    remote: $('#arriveTime2').val()
+    local: parseFloat($('#arriveTime1').val()),
+    remote: parseFloat($('#arriveTime2').val()),
   }
 }
 

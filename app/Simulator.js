@@ -15,7 +15,7 @@ class Simulator {
     this.currentTime = 0
   }
 
-  rateMessageType() {
+  sortMessageType() {
     const ll = this.config.trafficVolumn.ll
     const lr = this.config.trafficVolumn.lr
     const rl = this.config.trafficVolumn.rl
@@ -29,35 +29,42 @@ class Simulator {
     return MessageType.RR
   }
 
-  generateEvents(n) {
-    let arrival = 0
-
-    for (let i=0; i<n; i++) {
-      this.eventQueue.add(new EventMessage(i,
-                                           arrival,
-                                           Distribution.uniform(5, 9),
-                                           this.rateMessageType(),
-                                           MessageState.RECEPTION,
-                                           this.config.sfaTaxs))
-
-      arrival += Distribution.uniform(0, 1)
-    }
+  generateMessage() {
+    const messageType = this.sortMessageType()
+    let arrive = messageType.charAt(1) === 'L' ? Distribution.expo(this.config.arriveTime.local) : Distribution.expo(this.config.arriveTime.remote)
+    let message = new EventMessage(++this.lastMessage.id,
+                                   this.lastMessage.execTime + arrive,
+                                   Distribution.uniform(5, 9),
+                                   messageType,
+                                   MessageState.RECEPTION,
+                                   this.config.sfaTaxs)
+    this.eventQueue.add(message)
+    this.lastMessage = message
   }
 
   start() {
-   this.generateEvents(120)
+   this.lastMessage = new EventMessage(0,
+                                       0,
+                                       Distribution.uniform(5, 9),
+                                       this.sortMessageType(),
+                                       MessageState.RECEPTION,
+                                       this.config.sfaTaxs)
 
+   this.eventQueue.add(this.lastMessage)
    this.run()
   }
 
   run() {
-    if(this.eventQueue.isEmpty()) {
+    if(this.eventQueue.isEmpty() || this.currentTime > 1000) {
       this.finish()
 
       return
     }
 
+    this.generateMessage()
+
     let nextEvent = this.eventQueue.next()
+    this.currentTime = nextEvent.execTime
 
     nextEvent.run(this.receptionCenter,
                   this.localServiceCenter,
