@@ -13,23 +13,23 @@ let trafficVolumn = () => {
 
 let sfaTaxs = () => {
   return {
-    sucess: {
-      ll: $('#sTaxsLL').val(),
-      rr: $('#sTaxsRR').val(),
-      lr: $('#sTaxsLR').val(),
-      rl: $('#sTaxsRL').val(),
+    success: {
+      ll: parseFloat($('#sTaxsLL').val()),
+      rr: parseFloat($('#sTaxsRR').val()),
+      lr: parseFloat($('#sTaxsLR').val()),
+      rl: parseFloat($('#sTaxsRL').val()),
     },
     failure: {
-      ll: $('#fTaxsLL').val(),
-      rr: $('#fTaxsRR').val(),
-      lr: $('#fTaxsLR').val(),
-      rl: $('#fTaxsRL').val(),
+      ll: parseFloat($('#fTaxsLL').val()),
+      rr: parseFloat($('#fTaxsRR').val()),
+      lr: parseFloat($('#fTaxsLR').val()),
+      rl: parseFloat($('#fTaxsRL').val()),
     },
-    indentation: {
-      ll: $('#aTaxsLL').val(),
-      rr: $('#aTaxsRR').val(),
-      lr: $('#aTaxsLR').val(),
-      rl: $('#aTaxsRL').val(),
+    delay: {
+      ll: parseFloat($('#aTaxsLL').val()),
+      rr: parseFloat($('#aTaxsRR').val()),
+      lr: parseFloat($('#aTaxsLR').val()),
+      rl: parseFloat($('#aTaxsRL').val()),
     }
   }
 }

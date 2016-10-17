@@ -3,11 +3,8 @@ import EventMessage from './EventMessage'
 import { MessageType, MessageState } from './Enum'
 
 class Reception {
-  constructor(eventQueue, success, fail, delay) {
+  constructor(eventQueue) {
     this.eventQueue = eventQueue
-    this.success = success
-    this.fail = fail
-    this.delay = delay
   }
 
   receive(eventMessage) {
@@ -15,7 +12,8 @@ class Reception {
                                          eventMessage.execTime + eventMessage.servTime,
                                          eventMessage.servTime,
                                          eventMessage.type,
-                                         MessageState.SERVICE
+                                         MessageState.SERVICE,
+                                         eventMessage.statusRate
                                          ))
   }
 }

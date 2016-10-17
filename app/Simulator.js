@@ -19,19 +19,29 @@ class Simulator {
     let arrival = 0
 
     for (let i=0; i<n; i++) {
-      this.eventQueue.add(new EventMessage(i, arrival, Distribution.uniform(5, 9), MessageType.LL, MessageState.RECEPTION))
+      this.eventQueue.add(new EventMessage(i,
+                                           arrival,
+                                           Distribution.uniform(5, 9),
+                                           MessageType.LL,
+                                           MessageState.RECEPTION,
+                                           this.config.sfaTaxs))
+
       arrival += Distribution.uniform(7, 12)
     }
   }
 
   start() {
-    this.generateEvents(5)
+   this.generateEvents(5)
 
-    this.run()
+   this.run()
   }
 
   run() {
-    if(this.eventQueue.isEmpty()) { return }
+    if(this.eventQueue.isEmpty()) {
+      this.finish()
+
+      return
+    }
 
     let nextEvent = this.eventQueue.next()
 
@@ -40,9 +50,14 @@ class Simulator {
                   this.remoteServiceCenter)
 
     setTimeout(() => {
-      console.log(nextEvent.execTime)
+      console.log(`execTime: ${nextEvent.execTime} msgId: ${nextEvent.id} state: ${nextEvent.state}`)
       this.run()
     }, 1000)
+  }
+
+  finish() {
+    console.log(`local -> success: ${this.localServiceCenter.success} failure: ${this.localServiceCenter.failure} delay: ${this.localServiceCenter.delay}`)
+    console.log(`remote -> success: ${this.remoteServiceCenter.success} failure: ${this.remoteServiceCenter.failure} delay: ${this.remoteServiceCenter.delay}`)
   }
 }
 

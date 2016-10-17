@@ -11,3 +11,9 @@ export const MessageType = {
   RL: 'RL',
   RR: 'RR'
 }
+
+export const MessageStatus = {
+  SUCCESS: 'SUCCESS',
+  FAILURE: 'FAILURE',
+  DELAY: 'DELAY'
+}

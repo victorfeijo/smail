@@ -69,23 +69,23 @@
 	
 	var sfaTaxs = function sfaTaxs() {
 	  return {
-	    sucess: {
-	      ll: $('#sTaxsLL').val(),
-	      rr: $('#sTaxsRR').val(),
-	      lr: $('#sTaxsLR').val(),
-	      rl: $('#sTaxsRL').val()
+	    success: {
+	      ll: parseFloat($('#sTaxsLL').val()),
+	      rr: parseFloat($('#sTaxsRR').val()),
+	      lr: parseFloat($('#sTaxsLR').val()),
+	      rl: parseFloat($('#sTaxsRL').val())
 	    },
 	    failure: {
-	      ll: $('#fTaxsLL').val(),
-	      rr: $('#fTaxsRR').val(),
-	      lr: $('#fTaxsLR').val(),
-	      rl: $('#fTaxsRL').val()
+	      ll: parseFloat($('#fTaxsLL').val()),
+	      rr: parseFloat($('#fTaxsRR').val()),
+	      lr: parseFloat($('#fTaxsLR').val()),
+	      rl: parseFloat($('#fTaxsRL').val())
 	    },
-	    indentation: {
-	      ll: $('#aTaxsLL').val(),
-	      rr: $('#aTaxsRR').val(),
-	      lr: $('#aTaxsLR').val(),
-	      rl: $('#aTaxsRL').val()
+	    delay: {
+	      ll: parseFloat($('#aTaxsLL').val()),
+	      rr: parseFloat($('#aTaxsRR').val()),
+	      lr: parseFloat($('#aTaxsLR').val()),
+	      rl: parseFloat($('#aTaxsRL').val())
 	    }
 	  };
 	};
@@ -197,7 +197,8 @@
 	      var arrival = 0;
 	
 	      for (var i = 0; i < n; i++) {
-	        this.eventQueue.add(new _EventMessage2.default(i, arrival, _Calculus.Distribution.uniform(5, 9), _Enum.MessageType.LL, _Enum.MessageState.RECEPTION));
+	        this.eventQueue.add(new _EventMessage2.default(i, arrival, _Calculus.Distribution.uniform(5, 9), _Enum.MessageType.LL, _Enum.MessageState.RECEPTION, this.config.sfaTaxs));
+	
 	        arrival += _Calculus.Distribution.uniform(7, 12);
 	      }
 	    }
@@ -214,6 +215,8 @@
 	      var _this = this;
 	
 	      if (this.eventQueue.isEmpty()) {
+	        this.finish();
+	
 	        return;
 	      }
 	
@@ -222,9 +225,15 @@
 	      nextEvent.run(this.receptionCenter, this.localServiceCenter, this.remoteServiceCenter);
 	
 	      setTimeout(function () {
-	        console.log(nextEvent.execTime);
+	        console.log('execTime: ' + nextEvent.execTime + ' msgId: ' + nextEvent.id + ' state: ' + nextEvent.state);
 	        _this.run();
 	      }, 1000);
+	    }
+	  }, {
+	    key: 'finish',
+	    value: function finish() {
+	      console.log('local -> success: ' + this.localServiceCenter.success + ' failure: ' + this.localServiceCenter.failure + ' delay: ' + this.localServiceCenter.delay);
+	      console.log('remote -> success: ' + this.remoteServiceCenter.success + ' failure: ' + this.remoteServiceCenter.failure + ' delay: ' + this.remoteServiceCenter.delay);
 	    }
 	  }]);
 	
@@ -256,7 +265,7 @@
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 	
 	var EventMessage = function () {
-	  function EventMessage(id, execTime, servTime, type, state) {
+	  function EventMessage(id, execTime, servTime, type, state, statusRate) {
 	    _classCallCheck(this, EventMessage);
 	
 	    this.id = id;
@@ -264,6 +273,7 @@
 	    this.servTime = servTime;
 	    this.type = type;
 	    this.state = state;
+	    this.statusRate = statusRate;
 	  }
 	
 	  _createClass(EventMessage, [{
@@ -278,6 +288,44 @@
 	          remoteServiceCenter.receive(this);
 	        }
 	      } else if (this.state === _Enum.MessageState.FINISH) {}
+	    }
+	  }, {
+	    key: 'rate',
+	    value: function rate() {
+	      var success = 0;
+	      var failure = 0;
+	      var delay = 0;
+	
+	      if (this.type === _Enum.MessageType.LL) {
+	        success = this.statusRate.success.ll;
+	        failure = this.statusRate.failure.ll;
+	        delay = this.statusRate.delay.ll;
+	      }
+	      if (this.type === _Enum.MessageType.LR) {
+	        success = this.statusRate.success.lr;
+	        failure = this.statusRate.failure.lr;
+	        delay = this.statusRate.delay.lr;
+	      }
+	      if (this.type === _Enum.MessageType.RL) {
+	        success = this.statusRate.success.rl;
+	        failure = this.statusRate.failure.rl;
+	        delay = this.statusRate.delay.rl;
+	      }
+	      if (this.type === _Enum.MessageType.RR) {
+	        success = this.statusRate.success.rr;
+	        failure = this.statusRate.failure.rr;
+	        delay = this.statusRate.delay.rr;
+	      }
+	
+	      var rand = Math.random() * 100;
+	
+	      if (rand < success) {
+	        return _Enum.MessageStatus.SUCCESS;
+	      } else if (rand >= success && rand < success + failure) {
+	        return _Enum.MessageStatus.FAILURE;
+	      } else if (rand >= success + failure && rand < success + failure + delay) {
+	        return _Enum.MessageStatus.DELAY;
+	      }
 	    }
 	  }]);
 	
@@ -307,6 +355,12 @@
 	  LR: 'LR',
 	  RL: 'RL',
 	  RR: 'RR'
+	};
+	
+	var MessageStatus = exports.MessageStatus = {
+	  SUCCESS: 'SUCCESS',
+	  FAILURE: 'FAILURE',
+	  DELAY: 'DELAY'
 	};
 
 /***/ },
@@ -394,11 +448,30 @@
 	    _classCallCheck(this, ServiceCenter);
 	
 	    this.eventQueue = eventQueue;
+	    this.success = 0;
+	    this.failure = 0;
+	    this.delay = 0;
 	  }
 	
 	  _createClass(ServiceCenter, [{
 	    key: 'receive',
 	    value: function receive(eventMessage) {
+	      var status = eventMessage.rate();
+	
+	      if (status === _Enum.MessageStatus.SUCCESS) {
+	        this.success++;
+	      }
+	      if (status === _Enum.MessageStatus.FAILURE) {
+	        this.failure++;
+	      }
+	      if (status === _Enum.MessageStatus.DELAY) {
+	        this.delay++;
+	
+	        this.eventQueue.add(new _EventMessage2.default(eventMessage.id, eventMessage.servTime + eventMessage.execTime, eventMessage.servTime, eventMessage.type, _Enum.MessageState.SERVICE, eventMessage.statusRate));
+	
+	        return;
+	      }
+	
 	      this.eventQueue.add(new _EventMessage2.default(eventMessage.id, eventMessage.servTime + eventMessage.execTime, 0, eventMessage.type, _Enum.MessageState.FINISH));
 	    }
 	  }]);
@@ -435,19 +508,16 @@
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 	
 	var Reception = function () {
-	  function Reception(eventQueue, success, fail, delay) {
+	  function Reception(eventQueue) {
 	    _classCallCheck(this, Reception);
 	
 	    this.eventQueue = eventQueue;
-	    this.success = success;
-	    this.fail = fail;
-	    this.delay = delay;
 	  }
 	
 	  _createClass(Reception, [{
 	    key: 'receive',
 	    value: function receive(eventMessage) {
-	      this.eventQueue.add(new _EventMessage2.default(eventMessage.id, eventMessage.execTime + eventMessage.servTime, eventMessage.servTime, eventMessage.type, _Enum.MessageState.SERVICE));
+	      this.eventQueue.add(new _EventMessage2.default(eventMessage.id, eventMessage.execTime + eventMessage.servTime, eventMessage.servTime, eventMessage.type, _Enum.MessageState.SERVICE, eventMessage.statusRate));
 	    }
 	  }]);
 	
