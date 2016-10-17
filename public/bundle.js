@@ -248,9 +248,11 @@
 	      nextEvent.run(this.receptionCenter, this.localServiceCenter, this.remoteServiceCenter);
 	
 	      setTimeout(function () {
-	        console.log('execTime: ' + nextEvent.execTime + ' msgId: ' + nextEvent.id + ' state: ' + nextEvent.state + ' type: ' + nextEvent.type + ' localBusy: ' + _this.localServiceCenter.busyServers + ' remoteBusy: ' + _this.remoteServiceCenter.busyServers + ' localQueue: ' + _this.localServiceCenter.waitingQueue.length + ' remoteQueue: ' + _this.remoteServiceCenter.waitingQueue.length);
+	        var simLog = 'ID: ' + nextEvent.id + ' Estado: ' + nextEvent.state + ' Tipo: ' + nextEvent.type;
+	
+	        $('#simulation').append('<option>' + simLog + '</option>');
 	        _this.run();
-	      }, 1);
+	      }, 100);
 	    }
 	  }, {
 	    key: 'finish',

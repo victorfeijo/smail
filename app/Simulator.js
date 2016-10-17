@@ -71,9 +71,11 @@ class Simulator {
                   this.remoteServiceCenter)
 
     setTimeout(() => {
-      console.log(`execTime: ${nextEvent.execTime} msgId: ${nextEvent.id} state: ${nextEvent.state} type: ${nextEvent.type} localBusy: ${this.localServiceCenter.busyServers} remoteBusy: ${this.remoteServiceCenter.busyServers} localQueue: ${this.localServiceCenter.waitingQueue.length} remoteQueue: ${this.remoteServiceCenter.waitingQueue.length}`)
+      let simLog = `ID: ${nextEvent.id} Estado: ${nextEvent.state} Tipo: ${nextEvent.type}`
+
+      $('#simulation').append(`<option>${simLog}</option>`)
       this.run()
-    }, 1)
+    }, 100)
   }
 
   finish() {
