@@ -1,4 +1,6 @@
 import Simulator from './Simulator'
+import SimulatorConfig from './SimulatorConfig'
+import { Distribution, parse } from './Calculus'
 
 let trafficVolumn = () => {
   return {
@@ -80,12 +82,11 @@ let serviceTime = () => {
 }
 
 $('#alert').click(() => {
-  let sim = new Simulator()
+  const config = new SimulatorConfig(trafficVolumn(),
+                                     sfaTaxs(),
+                                     serviceCenter(),
+                                     arriveTime(),
+                                     serviceTime())
+  let sim = new Simulator(config)
   sim.start()
-
-  console.log(trafficVolumn())
-  console.log(sfaTaxs())
-  console.log(serviceCenter())
-  console.log(arriveTime())
-  console.log(serviceTime())
 })

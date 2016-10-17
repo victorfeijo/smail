@@ -50,6 +50,12 @@
 	
 	var _Simulator2 = _interopRequireDefault(_Simulator);
 	
+	var _SimulatorConfig = __webpack_require__(8);
+	
+	var _SimulatorConfig2 = _interopRequireDefault(_SimulatorConfig);
+	
+	var _Calculus = __webpack_require__(7);
+	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
 	var trafficVolumn = function trafficVolumn() {
@@ -132,21 +138,16 @@
 	};
 	
 	$('#alert').click(function () {
-	  var sim = new _Simulator2.default();
+	  var config = new _SimulatorConfig2.default(trafficVolumn(), sfaTaxs(), serviceCenter(), arriveTime(), serviceTime());
+	  var sim = new _Simulator2.default(config);
 	  sim.start();
-	
-	  console.log(trafficVolumn());
-	  console.log(sfaTaxs());
-	  console.log(serviceCenter());
-	  console.log(arriveTime());
-	  console.log(serviceTime());
 	});
 
 /***/ },
 /* 1 */
 /***/ function(module, exports, __webpack_require__) {
 
-	"use strict";
+	'use strict';
 	
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
@@ -154,41 +155,76 @@
 	
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 	
-	var _Event = __webpack_require__(2);
+	var _EventMessage = __webpack_require__(2);
 	
-	var _Event2 = _interopRequireDefault(_Event);
+	var _EventMessage2 = _interopRequireDefault(_EventMessage);
+	
+	var _EventQueue = __webpack_require__(4);
+	
+	var _EventQueue2 = _interopRequireDefault(_EventQueue);
+	
+	var _ServiceCenter = __webpack_require__(5);
+	
+	var _ServiceCenter2 = _interopRequireDefault(_ServiceCenter);
+	
+	var _Reception = __webpack_require__(6);
+	
+	var _Reception2 = _interopRequireDefault(_Reception);
+	
+	var _Calculus = __webpack_require__(7);
+	
+	var _Enum = __webpack_require__(3);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 	
 	var Simulator = function () {
-	  function Simulator() {
+	  function Simulator(config) {
 	    _classCallCheck(this, Simulator);
 	
-	    this.eventQueue = new Array();
+	    this.eventQueue = new _EventQueue2.default();
+	    this.localServiceCenter = new _ServiceCenter2.default(this.eventQueue);
+	    this.remoteServiceCenter = new _ServiceCenter2.default(this.eventQueue);
+	    this.receptionCenter = new _Reception2.default(this.eventQueue);
+	    this.currentTime = 0;
+	    this.config = config;
 	  }
 	
 	  _createClass(Simulator, [{
-	    key: "generateEvents",
-	    value: function generateEvents() {
-	      for (var i = 0; i < 100; i++) {
-	        this.eventQueue.push(new _Event2.default(Math.random() * 15, Math.random() * 15));
+	    key: 'generateEvents',
+	    value: function generateEvents(n) {
+	      var arrival = 0;
+	
+	      for (var i = 0; i < n; i++) {
+	        this.eventQueue.add(new _EventMessage2.default(i, arrival, _Calculus.Distribution.uniform(5, 9), _Enum.MessageType.LL, _Enum.MessageState.RECEPTION));
+	        arrival += _Calculus.Distribution.uniform(7, 12);
 	      }
 	    }
 	  }, {
-	    key: "start",
+	    key: 'start',
 	    value: function start() {
-	      var currentTime = 0;
+	      this.generateEvents(5);
 	
-	      this.generateEvents();
+	      this.run();
+	    }
+	  }, {
+	    key: 'run',
+	    value: function run() {
+	      var _this = this;
 	
-	      this.eventQueue.forEach(function (event, i) {
-	        currentTime += event.finishTime();
-	        // $("#testanu").html( `Tempo Atual: ${currentTime}` )
-	      });
+	      if (this.eventQueue.isEmpty()) {
+	        return;
+	      }
 	
-	      $("#currentTime").html("Tempo Atual: " + currentTime);
+	      var nextEvent = this.eventQueue.next();
+	
+	      nextEvent.run(this.receptionCenter, this.localServiceCenter, this.remoteServiceCenter);
+	
+	      setTimeout(function () {
+	        console.log(nextEvent.execTime);
+	        _this.run();
+	      }, 1000);
 	    }
 	  }]);
 	
@@ -199,6 +235,82 @@
 
 /***/ },
 /* 2 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	
+	var _Enum = __webpack_require__(3);
+	
+	var _EventQueue = __webpack_require__(4);
+	
+	var _EventQueue2 = _interopRequireDefault(_EventQueue);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	var EventMessage = function () {
+	  function EventMessage(id, execTime, servTime, type, state) {
+	    _classCallCheck(this, EventMessage);
+	
+	    this.id = id;
+	    this.execTime = execTime;
+	    this.servTime = servTime;
+	    this.type = type;
+	    this.state = state;
+	  }
+	
+	  _createClass(EventMessage, [{
+	    key: 'run',
+	    value: function run(receptionCenter, localServiceCenter, removeServiceCenter) {
+	      if (this.state === _Enum.MessageState.RECEPTION) {
+	        receptionCenter.receive(this);
+	      } else if (this.state === _Enum.MessageState.SERVICE) {
+	        if (this.type === _Enum.MessageType.LL || this.type === Messagetype.RL) {
+	          localServiceCenter.receive(this);
+	        } else {
+	          remoteServiceCenter.receive(this);
+	        }
+	      } else if (this.state === _Enum.MessageState.FINISH) {}
+	    }
+	  }]);
+	
+	  return EventMessage;
+	}();
+	
+	exports.default = EventMessage;
+
+/***/ },
+/* 3 */
+/***/ function(module, exports) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	var MessageState = exports.MessageState = {
+	  RECEPTION: 'RECEPTION',
+	  SERVICE: 'SERVICE',
+	  WAITING: 'WAITING',
+	  FINISH: 'FINISH'
+	};
+	
+	var MessageType = exports.MessageType = {
+	  LL: 'LL',
+	  LR: 'LR',
+	  RL: 'RL',
+	  RR: 'RR'
+	};
+
+/***/ },
+/* 4 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -211,28 +323,235 @@
 	
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 	
-	var Event = function () {
-	  function Event(execute, service) {
-	    _classCallCheck(this, Event);
+	var EventQueue = function () {
+	  function EventQueue() {
+	    _classCallCheck(this, EventQueue);
 	
-	    this.execute = execute;
-	    this.service = service;
+	    this.queue = new Array();
 	  }
 	
-	  _createClass(Event, [{
-	    key: "finishTime",
-	    value: function finishTime() {
-	      return this.execute + this.service;
+	  _createClass(EventQueue, [{
+	    key: "add",
+	    value: function add(event) {
+	      for (var i = 0; i < this.queue.length; i++) {
+	        if (event.execTime < this.queue[i].execTime) {
+	          this.queue.splice(i, 0, event);
+	
+	          return;
+	        }
+	      }
+	
+	      this.queue.push(event);
 	    }
 	  }, {
-	    key: "run",
-	    value: function run() {}
+	    key: "next",
+	    value: function next() {
+	      if (this.queue.length > 0) {
+	        return this.queue.shift();
+	      }
+	    }
+	  }, {
+	    key: "isEmpty",
+	    value: function isEmpty() {
+	      return this.queue.length === 0;
+	    }
+	  }, {
+	    key: "map",
+	    value: function map(func) {
+	      return this.queue.map(func);
+	    }
 	  }]);
 	
-	  return Event;
+	  return EventQueue;
 	}();
 	
-	exports.default = Event;
+	exports.default = EventQueue;
+
+/***/ },
+/* 5 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	
+	var _EventMessage = __webpack_require__(2);
+	
+	var _EventMessage2 = _interopRequireDefault(_EventMessage);
+	
+	var _Enum = __webpack_require__(3);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	var ServiceCenter = function () {
+	  function ServiceCenter(eventQueue) {
+	    _classCallCheck(this, ServiceCenter);
+	
+	    this.eventQueue = eventQueue;
+	  }
+	
+	  _createClass(ServiceCenter, [{
+	    key: 'receive',
+	    value: function receive(eventMessage) {
+	      this.eventQueue.add(new _EventMessage2.default(eventMessage.id, eventMessage.servTime + eventMessage.execTime, 0, eventMessage.type, _Enum.MessageState.FINISH));
+	    }
+	  }]);
+	
+	  return ServiceCenter;
+	}();
+	
+	exports.default = ServiceCenter;
+
+/***/ },
+/* 6 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	
+	var _ServiceCenter = __webpack_require__(5);
+	
+	var _ServiceCenter2 = _interopRequireDefault(_ServiceCenter);
+	
+	var _EventMessage = __webpack_require__(2);
+	
+	var _EventMessage2 = _interopRequireDefault(_EventMessage);
+	
+	var _Enum = __webpack_require__(3);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	var Reception = function () {
+	  function Reception(eventQueue, success, fail, delay) {
+	    _classCallCheck(this, Reception);
+	
+	    this.eventQueue = eventQueue;
+	    this.success = success;
+	    this.fail = fail;
+	    this.delay = delay;
+	  }
+	
+	  _createClass(Reception, [{
+	    key: 'receive',
+	    value: function receive(eventMessage) {
+	      this.eventQueue.add(new _EventMessage2.default(eventMessage.id, eventMessage.execTime + eventMessage.servTime, eventMessage.servTime, eventMessage.type, _Enum.MessageState.SERVICE));
+	    }
+	  }]);
+	
+	  return Reception;
+	}();
+	
+	exports.default = Reception;
+
+/***/ },
+/* 7 */
+/***/ function(module, exports) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	var Distribution = exports.Distribution = {
+	  normal: function normal(a, b) {
+	    var u1 = Math.random();
+	    var u2 = Math.random();
+	
+	    var z = Math.sqrt(-2 * Math.log(u1)) * Math.sin(2 * 180 * u2);
+	
+	    return a + b * z;
+	  },
+	  uniform: function uniform(a, b) {
+	    var u = Math.random();
+	
+	    return a + u * (b - a);
+	  },
+	  triangular: function triangular(a, b, c) {
+	    var u = Math.random();
+	
+	    if (u <= (b - a) / (c - a)) {
+	      return a + Math.sqrt(u * (b - a) * (c - a));
+	    }
+	
+	    return a - Math.sqrt((1 - u) * (c - b) * (c - a));
+	  },
+	  expo: function expo(l) {
+	    var u = Math.random();
+	
+	    return -1 / l * Math.log(1 - u);
+	  }
+	};
+	
+	var parseDistribution = exports.parseDistribution = function parseDistribution(expression) {
+	  var match = /(\w+)\((.*)\)/i.exec(expression);
+	  var distribution = match[1];
+	  var params = match[2].split(';');
+	
+	  if (distribution.toLowerCase() === 'normal') {
+	    if (params.length !== 2) {
+	      return 0;
+	    }
+	
+	    return Distribution.normal(parseFloat(params[0]), parseFloat(params[1]));
+	  } else if (distribution.toLowerCase() === 'uniform') {
+	    if (params.length !== 2) {
+	      return 0;
+	    }
+	
+	    return Distribution.uniform(parseFloat(params[0]), parseFloat(params[1]));
+	  } else if (distribution.toLowerCase() === 'triangular') {
+	    if (params.length !== 3) {
+	      return 0;
+	    }
+	
+	    return Distribution.triangular(parseFloat(params[0]), parseFloat(params[1]), parseFloat(params[2]));
+	  } else if (distribution.toLowerCase() === 'expo') {
+	    if (params.length !== 1) {
+	      return 0;
+	    }
+	
+	    return Distribution.expo(parseFloat(params[0]));
+	  }
+	
+	  return 0;
+	};
+
+/***/ },
+/* 8 */
+/***/ function(module, exports) {
+
+	"use strict";
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	var SimulatorConfig = function SimulatorConfig(trafficVolumn, sfaTaxs, serviceCentre, arriveTime, serviceTime) {
+	  _classCallCheck(this, SimulatorConfig);
+	
+	  this.trafficVolumn = trafficVolumn;
+	  this.sfaTaxs = sfaTaxs;
+	  this.serviceCentre = serviceCentre;
+	  this.arriveTime = arriveTime;
+	  this.serviceTime = serviceTime;
+	};
+	
+	exports.default = SimulatorConfig;
 
 /***/ }
 /******/ ]);

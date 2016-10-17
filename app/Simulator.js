@@ -1,27 +1,48 @@
-import Event from './Event'
+import EventMessage from './EventMessage'
+import EventQueue from './EventQueue'
+import ServiceCenter from './ServiceCenter'
+import Reception from './Reception'
+import { Distribution } from './Calculus'
+import { MessageType, MessageState } from './Enum'
 
 class Simulator {
-  constructor() {
-    this.eventQueue = new Array()
+  constructor(config) {
+    this.eventQueue = new EventQueue()
+    this.localServiceCenter = new ServiceCenter(this.eventQueue)
+    this.remoteServiceCenter = new ServiceCenter(this.eventQueue)
+    this.receptionCenter = new Reception(this.eventQueue)
+    this.currentTime = 0
+    this.config = config
   }
 
-  generateEvents() {
-    for(let i=0; i<100; i++) {
-      this.eventQueue.push(new Event(Math.random()*15, Math.random()*15))
+  generateEvents(n) {
+    let arrival = 0
+
+    for (let i=0; i<n; i++) {
+      this.eventQueue.add(new EventMessage(i, arrival, Distribution.uniform(5, 9), MessageType.LL, MessageState.RECEPTION))
+      arrival += Distribution.uniform(7, 12)
     }
   }
 
   start() {
-    let currentTime = 0
+    this.generateEvents(5)
 
-    this.generateEvents()
+    this.run()
+  }
 
-    this.eventQueue.forEach((event, i) => {
-      currentTime += event.finishTime()
-      // $("#testanu").html( `Tempo Atual: ${currentTime}` )
-    })
+  run() {
+    if(this.eventQueue.isEmpty()) { return }
 
-    $("#currentTime").html( `Tempo Atual: ${currentTime}` )
+    let nextEvent = this.eventQueue.next()
+
+    nextEvent.run(this.receptionCenter,
+                  this.localServiceCenter,
+                  this.remoteServiceCenter)
+
+    setTimeout(() => {
+      console.log(nextEvent.execTime)
+      this.run()
+    }, 1000)
   }
 }
 
