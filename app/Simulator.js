@@ -15,6 +15,26 @@ class Simulator {
     this.config = config
   }
 
+  rateMessageType() {
+    const ll = this.config.trafficVolumn.ll
+    const lr = this.config.trafficVolumn.lr
+    const rl = this.config.trafficVolumn.rl
+    const rr = this.config.trafficVolumn.rr
+    const rand = Math.random()*100
+
+    if (rand <= ll) {
+      return MessageType.LL
+    }
+    if (rand <= ll + lr) {
+      return MessageType.LR
+    }
+    if (rand <= ll + lr + rl) {
+      return MessageType.RL
+    }
+
+    return MessageType.RR
+  }
+
   generateEvents(n) {
     let arrival = 0
 
@@ -22,7 +42,7 @@ class Simulator {
       this.eventQueue.add(new EventMessage(i,
                                            arrival,
                                            Distribution.uniform(5, 9),
-                                           MessageType.LL,
+                                           this.rateMessageType(),
                                            MessageState.RECEPTION,
                                            this.config.sfaTaxs))
 
@@ -50,7 +70,7 @@ class Simulator {
                   this.remoteServiceCenter)
 
     setTimeout(() => {
-      console.log(`execTime: ${nextEvent.execTime} msgId: ${nextEvent.id} state: ${nextEvent.state}`)
+      console.log(`execTime: ${nextEvent.execTime} msgId: ${nextEvent.id} state: ${nextEvent.state} type: ${nextEvent.type}`)
       this.run()
     }, 1000)
   }

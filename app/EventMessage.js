@@ -11,12 +11,12 @@ class EventMessage {
     this.statusRate = statusRate
   }
 
-  run(receptionCenter, localServiceCenter, removeServiceCenter) {
+  run(receptionCenter, localServiceCenter, remoteServiceCenter) {
     if (this.state === MessageState.RECEPTION) {
       receptionCenter.receive(this)
     } else if (this.state === MessageState.SERVICE) {
       if (this.type === MessageType.LL ||
-          this.type === Messagetype.RL) {
+          this.type === MessageType.RL) {
         localServiceCenter.receive(this)
       } else {
         remoteServiceCenter.receive(this)

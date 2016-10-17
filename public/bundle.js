@@ -60,10 +60,10 @@
 	
 	var trafficVolumn = function trafficVolumn() {
 	  return {
-	    ll: $('#trafficVolumnLL').val(),
-	    rr: $('#trafficVolumnRR').val(),
-	    lr: $('#trafficVolumnLR').val(),
-	    rl: $('#trafficVolumnRL').val()
+	    ll: parseFloat($('#trafficVolumnLL').val()),
+	    rr: parseFloat($('#trafficVolumnRR').val()),
+	    lr: parseFloat($('#trafficVolumnLR').val()),
+	    rl: parseFloat($('#trafficVolumnRL').val())
 	  };
 	};
 	
@@ -192,12 +192,33 @@
 	  }
 	
 	  _createClass(Simulator, [{
+	    key: 'rateMessageType',
+	    value: function rateMessageType() {
+	      var ll = this.config.trafficVolumn.ll;
+	      var lr = this.config.trafficVolumn.lr;
+	      var rl = this.config.trafficVolumn.rl;
+	      var rr = this.config.trafficVolumn.rr;
+	      var rand = Math.random() * 100;
+	
+	      if (rand <= ll) {
+	        return _Enum.MessageType.LL;
+	      }
+	      if (rand <= ll + lr) {
+	        return _Enum.MessageType.LR;
+	      }
+	      if (rand <= ll + lr + rl) {
+	        return _Enum.MessageType.RL;
+	      }
+	
+	      return _Enum.MessageType.RR;
+	    }
+	  }, {
 	    key: 'generateEvents',
 	    value: function generateEvents(n) {
 	      var arrival = 0;
 	
 	      for (var i = 0; i < n; i++) {
-	        this.eventQueue.add(new _EventMessage2.default(i, arrival, _Calculus.Distribution.uniform(5, 9), _Enum.MessageType.LL, _Enum.MessageState.RECEPTION, this.config.sfaTaxs));
+	        this.eventQueue.add(new _EventMessage2.default(i, arrival, _Calculus.Distribution.uniform(5, 9), this.rateMessageType(), _Enum.MessageState.RECEPTION, this.config.sfaTaxs));
 	
 	        arrival += _Calculus.Distribution.uniform(7, 12);
 	      }
@@ -225,7 +246,7 @@
 	      nextEvent.run(this.receptionCenter, this.localServiceCenter, this.remoteServiceCenter);
 	
 	      setTimeout(function () {
-	        console.log('execTime: ' + nextEvent.execTime + ' msgId: ' + nextEvent.id + ' state: ' + nextEvent.state);
+	        console.log('execTime: ' + nextEvent.execTime + ' msgId: ' + nextEvent.id + ' state: ' + nextEvent.state + ' type: ' + nextEvent.type);
 	        _this.run();
 	      }, 1000);
 	    }
@@ -278,11 +299,11 @@
 	
 	  _createClass(EventMessage, [{
 	    key: 'run',
-	    value: function run(receptionCenter, localServiceCenter, removeServiceCenter) {
+	    value: function run(receptionCenter, localServiceCenter, remoteServiceCenter) {
 	      if (this.state === _Enum.MessageState.RECEPTION) {
 	        receptionCenter.receive(this);
 	      } else if (this.state === _Enum.MessageState.SERVICE) {
-	        if (this.type === _Enum.MessageType.LL || this.type === Messagetype.RL) {
+	        if (this.type === _Enum.MessageType.LL || this.type === _Enum.MessageType.RL) {
 	          localServiceCenter.receive(this);
 	        } else {
 	          remoteServiceCenter.receive(this);
@@ -611,12 +632,12 @@
 	
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 	
-	var SimulatorConfig = function SimulatorConfig(trafficVolumn, sfaTaxs, serviceCentre, arriveTime, serviceTime) {
+	var SimulatorConfig = function SimulatorConfig(trafficVolumn, sfaTaxs, serviceCenter, arriveTime, serviceTime) {
 	  _classCallCheck(this, SimulatorConfig);
 	
 	  this.trafficVolumn = trafficVolumn;
 	  this.sfaTaxs = sfaTaxs;
-	  this.serviceCentre = serviceCentre;
+	  this.serviceCenter = serviceCenter;
 	  this.arriveTime = arriveTime;
 	  this.serviceTime = serviceTime;
 	};

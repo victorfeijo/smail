@@ -1,8 +1,8 @@
 class SimulatorConfig {
-  constructor(trafficVolumn, sfaTaxs, serviceCentre, arriveTime, serviceTime) {
+  constructor(trafficVolumn, sfaTaxs, serviceCenter, arriveTime, serviceTime) {
     this.trafficVolumn = trafficVolumn
     this.sfaTaxs = sfaTaxs
-    this.serviceCentre = serviceCentre
+    this.serviceCenter = serviceCenter
     this.arriveTime = arriveTime
     this.serviceTime = serviceTime
   }

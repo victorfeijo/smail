@@ -4,10 +4,10 @@ import { Distribution, parse } from './Calculus'
 
 let trafficVolumn = () => {
   return {
-    ll: $('#trafficVolumnLL').val(),
-    rr: $('#trafficVolumnRR').val(),
-    lr: $('#trafficVolumnLR').val(),
-    rl: $('#trafficVolumnRL').val()
+    ll: parseFloat($('#trafficVolumnLL').val()),
+    rr: parseFloat($('#trafficVolumnRR').val()),
+    lr: parseFloat($('#trafficVolumnLR').val()),
+    rl: parseFloat($('#trafficVolumnRL').val())
   }
 }
 
