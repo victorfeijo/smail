@@ -7,12 +7,12 @@ import { MessageType, MessageState } from './Enum'
 
 class Simulator {
   constructor(config) {
+    this.config = config
     this.eventQueue = new EventQueue()
-    this.localServiceCenter = new ServiceCenter(this.eventQueue)
-    this.remoteServiceCenter = new ServiceCenter(this.eventQueue)
+    this.localServiceCenter = new ServiceCenter(this.eventQueue, this.config.serviceCenter.center1)
+    this.remoteServiceCenter = new ServiceCenter(this.eventQueue, this.config.serviceCenter.center2)
     this.receptionCenter = new Reception(this.eventQueue)
     this.currentTime = 0
-    this.config = config
   }
 
   rateMessageType() {
@@ -22,15 +22,9 @@ class Simulator {
     const rr = this.config.trafficVolumn.rr
     const rand = Math.random()*100
 
-    if (rand <= ll) {
-      return MessageType.LL
-    }
-    if (rand <= ll + lr) {
-      return MessageType.LR
-    }
-    if (rand <= ll + lr + rl) {
-      return MessageType.RL
-    }
+    if (rand <= ll) { return MessageType.LL }
+    if (rand <= ll + lr) { return MessageType.LR }
+    if (rand <= ll + lr + rl) { return MessageType.RL }
 
     return MessageType.RR
   }
@@ -46,12 +40,12 @@ class Simulator {
                                            MessageState.RECEPTION,
                                            this.config.sfaTaxs))
 
-      arrival += Distribution.uniform(7, 12)
+      arrival += Distribution.uniform(0, 1)
     }
   }
 
   start() {
-   this.generateEvents(5)
+   this.generateEvents(120)
 
    this.run()
   }
@@ -70,9 +64,9 @@ class Simulator {
                   this.remoteServiceCenter)
 
     setTimeout(() => {
-      console.log(`execTime: ${nextEvent.execTime} msgId: ${nextEvent.id} state: ${nextEvent.state} type: ${nextEvent.type}`)
+      console.log(`execTime: ${nextEvent.execTime} msgId: ${nextEvent.id} state: ${nextEvent.state} type: ${nextEvent.type} localBusy: ${this.localServiceCenter.busyServers} remoteBusy: ${this.remoteServiceCenter.busyServers} localQueue: ${this.localServiceCenter.waitingQueue.length} remoteQueue: ${this.remoteServiceCenter.waitingQueue.length}`)
       this.run()
-    }, 1000)
+    }, 1)
   }
 
   finish() {
