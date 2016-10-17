@@ -50,6 +50,10 @@
 	
 	var _Simulator2 = _interopRequireDefault(_Simulator);
 	
+	var _SimulatorConfig = __webpack_require__(8);
+	
+	var _SimulatorConfig2 = _interopRequireDefault(_SimulatorConfig);
+	
 	var _Calculus = __webpack_require__(7);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
@@ -134,19 +138,9 @@
 	};
 	
 	$('#alert').click(function () {
-	  var sim = new _Simulator2.default();
+	  var config = new _SimulatorConfig2.default(trafficVolumn(), sfaTaxs(), serviceCenter(), arriveTime(), serviceTime());
+	  var sim = new _Simulator2.default(config);
 	  sim.start();
-	
-	  console.log(trafficVolumn());
-	  console.log(sfaTaxs());
-	  console.log(serviceCenter());
-	  console.log(arriveTime());
-	  console.log(serviceTime());
-	
-	  console.log(_Calculus.Distribution.normal(5, 15));
-	  console.log(_Calculus.Distribution.uniform(5, 15));
-	  console.log(_Calculus.Distribution.triangular(5, 10, 15));
-	  console.log(_Calculus.Distribution.expo(15));
 	});
 
 /***/ },
@@ -186,7 +180,7 @@
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 	
 	var Simulator = function () {
-	  function Simulator() {
+	  function Simulator(config) {
 	    _classCallCheck(this, Simulator);
 	
 	    this.eventQueue = new _EventQueue2.default();
@@ -194,6 +188,7 @@
 	    this.remoteServiceCenter = new _ServiceCenter2.default(this.eventQueue);
 	    this.receptionCenter = new _Reception2.default(this.eventQueue);
 	    this.currentTime = 0;
+	    this.config = config;
 	  }
 	
 	  _createClass(Simulator, [{
@@ -211,13 +206,25 @@
 	    value: function start() {
 	      this.generateEvents(5);
 	
-	      while (!this.eventQueue.isEmpty()) {
-	        var nextEvent = this.eventQueue.next();
+	      this.run();
+	    }
+	  }, {
+	    key: 'run',
+	    value: function run() {
+	      var _this = this;
 	
-	        console.log('message ' + nextEvent.id + ' status => ' + nextEvent.state + ' execTime => ' + nextEvent.execTime);
-	
-	        nextEvent.run(this.receptionCenter, this.localServiceCenter, this.remoteServiceCenter);
+	      if (this.eventQueue.isEmpty()) {
+	        return;
 	      }
+	
+	      var nextEvent = this.eventQueue.next();
+	
+	      nextEvent.run(this.receptionCenter, this.localServiceCenter, this.remoteServiceCenter);
+	
+	      setTimeout(function () {
+	        console.log(nextEvent.execTime);
+	        _this.run();
+	      }, 1000);
 	    }
 	  }]);
 	
@@ -428,10 +435,13 @@
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 	
 	var Reception = function () {
-	  function Reception(eventQueue) {
+	  function Reception(eventQueue, success, fail, delay) {
 	    _classCallCheck(this, Reception);
 	
 	    this.eventQueue = eventQueue;
+	    this.success = success;
+	    this.fail = fail;
+	    this.delay = delay;
 	  }
 	
 	  _createClass(Reception, [{
@@ -450,7 +460,7 @@
 /* 7 */
 /***/ function(module, exports) {
 
-	"use strict";
+	'use strict';
 	
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
@@ -484,6 +494,64 @@
 	    return -1 / l * Math.log(1 - u);
 	  }
 	};
+	
+	var parseDistribution = exports.parseDistribution = function parseDistribution(expression) {
+	  var match = /(\w+)\((.*)\)/i.exec(expression);
+	  var distribution = match[1];
+	  var params = match[2].split(';');
+	
+	  if (distribution.toLowerCase() === 'normal') {
+	    if (params.length !== 2) {
+	      return 0;
+	    }
+	
+	    return Distribution.normal(parseFloat(params[0]), parseFloat(params[1]));
+	  } else if (distribution.toLowerCase() === 'uniform') {
+	    if (params.length !== 2) {
+	      return 0;
+	    }
+	
+	    return Distribution.uniform(parseFloat(params[0]), parseFloat(params[1]));
+	  } else if (distribution.toLowerCase() === 'triangular') {
+	    if (params.length !== 3) {
+	      return 0;
+	    }
+	
+	    return Distribution.triangular(parseFloat(params[0]), parseFloat(params[1]), parseFloat(params[2]));
+	  } else if (distribution.toLowerCase() === 'expo') {
+	    if (params.length !== 1) {
+	      return 0;
+	    }
+	
+	    return Distribution.expo(parseFloat(params[0]));
+	  }
+	
+	  return 0;
+	};
+
+/***/ },
+/* 8 */
+/***/ function(module, exports) {
+
+	"use strict";
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	var SimulatorConfig = function SimulatorConfig(trafficVolumn, sfaTaxs, serviceCentre, arriveTime, serviceTime) {
+	  _classCallCheck(this, SimulatorConfig);
+	
+	  this.trafficVolumn = trafficVolumn;
+	  this.sfaTaxs = sfaTaxs;
+	  this.serviceCentre = serviceCentre;
+	  this.arriveTime = arriveTime;
+	  this.serviceTime = serviceTime;
+	};
+	
+	exports.default = SimulatorConfig;
 
 /***/ }
 /******/ ]);

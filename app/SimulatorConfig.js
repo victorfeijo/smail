@@ -6,10 +6,6 @@ class SimulatorConfig {
     this.arriveTime = arriveTime
     this.serviceTime = serviceTime
   }
-
-  parseExpression(expression) {
-  }
-
 }
 
 export default SimulatorConfig

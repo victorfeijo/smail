@@ -6,12 +6,13 @@ import { Distribution } from './Calculus'
 import { MessageType, MessageState } from './Enum'
 
 class Simulator {
-  constructor() {
+  constructor(config) {
     this.eventQueue = new EventQueue()
     this.localServiceCenter = new ServiceCenter(this.eventQueue)
     this.remoteServiceCenter = new ServiceCenter(this.eventQueue)
     this.receptionCenter = new Reception(this.eventQueue)
     this.currentTime = 0
+    this.config = config
   }
 
   generateEvents(n) {
@@ -26,15 +27,22 @@ class Simulator {
   start() {
     this.generateEvents(5)
 
-    while (!this.eventQueue.isEmpty()) {
-      let nextEvent = this.eventQueue.next()
+    this.run()
+  }
 
-      // console.log(`message ${nextEvent.id} status => ${nextEvent.state} execTime => ${nextEvent.execTime}`)
+  run() {
+    if(this.eventQueue.isEmpty()) { return }
 
-      nextEvent.run(this.receptionCenter,
-                    this.localServiceCenter,
-                    this.remoteServiceCenter)
-    }
+    let nextEvent = this.eventQueue.next()
+
+    nextEvent.run(this.receptionCenter,
+                  this.localServiceCenter,
+                  this.remoteServiceCenter)
+
+    setTimeout(() => {
+      console.log(nextEvent.execTime)
+      this.run()
+    }, 1000)
   }
 }
 
