@@ -51,18 +51,18 @@ let arriveTime = () => {
 let serviceTime = () => {
   return {
     reception: {
-      lls: $('#receptionCenterLLS').val(),
-      llf: $('#receptionCenterLLF').val(),
-      lla: $('#receptionCenterLLA').val(),
-      lrs: $('#receptionCenterLRS').val(),
-      lrf: $('#receptionCenterLRF').val(),
-      lra: $('#receptionCenterLRA').val(),
-      rls: $('#receptionCenterRLS').val(),
-      rlf: $('#receptionCenterRLF').val(),
-      rla: $('#receptionCenterRLA').val(),
-      rrs: $('#receptionCenterRRS').val(),
-      rrf: $('#receptionCenterRRF').val(),
-      rra: $('#receptionCenterRRA').val(),
+      lls: parseFloat($('#receptionCenterLLS').val()),
+      llf: parseFloat($('#receptionCenterLLF').val()),
+      lla: parseFloat($('#receptionCenterLLA').val()),
+      lrs: parseFloat($('#receptionCenterLRS').val()),
+      lrf: parseFloat($('#receptionCenterLRF').val()),
+      lra: parseFloat($('#receptionCenterLRA').val()),
+      rls: parseFloat($('#receptionCenterRLS').val()),
+      rlf: parseFloat($('#receptionCenterRLF').val()),
+      rla: parseFloat($('#receptionCenterRLA').val()),
+      rrs: parseFloat($('#receptionCenterRRS').val()),
+      rrf: parseFloat($('#receptionCenterRRF').val()),
+      rra: parseFloat($('#receptionCenterRRA').val())
     },
     service: {
       lls: $('#serviceCenterLLS').val(),

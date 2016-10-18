@@ -84,6 +84,9 @@ export const Sort = {
 
 export const parseDistribution = (expression) => {
   let match = /(\w+)\((.*)\)/i.exec(expression)
+
+  if (match === null) { return Distribution.uniform(3, 7) }
+
   const distribution = match[1]
   const params = match[2].split(';')
 

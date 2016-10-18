@@ -2,8 +2,8 @@ import EventMessage from './EventMessage'
 import EventQueue from './EventQueue'
 import ServiceCenter from './ServiceCenter'
 import Reception from './Reception'
-import { Distribution, Sort } from './Calculus'
-import { MessageType, MessageState } from './Enum'
+import { Distribution, Sort, parseDistribution } from './Calculus'
+import { MessageType, MessageState, MessageStatus } from './Enum'
 
 class Simulator {
   constructor(config) {
@@ -15,18 +15,101 @@ class Simulator {
     this.currentTime = 0
   }
 
-  serviceTime(type, status) {
+  // Big method because theres a lot of options to choose on users interface
+  // Returns a object {reception, service} within time based on the type and status
+  messageTimes(type, status) {
+    if (type === MessageType.LL) {
+      if (status === MessageStatus.SUCCESS) {
+        return {
+          reception: this.config.serviceTime.reception.lls,
+          service: parseDistribution(this.config.serviceTime.service.lls)
+        }
+      }
+      if (status === MessageStatus.FAILURE) {
+        return {
+          reception: this.config.serviceTime.reception.llf,
+          service: parseDistribution(this.config.serviceTime.service.llf)
+        }
+      }
+      if (status === MessageStatus.DELAY) {
+        return {
+          reception: this.config.serviceTime.reception.lla,
+          service: parseDistribution(this.config.serviceTime.service.lla)
+        }
+      }
+    }
+    if (type === MessageType.LR) {
+      if (status === MessageStatus.SUCCESS) {
+        return {
+          reception: this.config.serviceTime.reception.lrs,
+          service: parseDistribution(this.config.serviceTime.service.lrs)
+        }
+      }
+      if (status === MessageStatus.FAILURE) {
+        return {
+          reception: this.config.serviceTime.reception.lrf,
+          service: parseDistribution(this.config.serviceTime.service.lrf)
+        }
+      }
+      if (status === MessageStatus.DELAY) {
+        return {
+          reception: this.config.serviceTime.reception.lra,
+          service: parseDistribution(this.config.serviceTime.service.lra)
+        }
+      }
+    }
+    if (type === MessageType.RL) {
+      if (status === MessageStatus.SUCCESS) {
+        return {
+          reception: this.config.serviceTime.reception.rls,
+          service: parseDistribution(this.config.serviceTime.service.rls)
+        }
+      }
+      if (status === MessageStatus.FAILURE) {
+        return {
+          reception: this.config.serviceTime.reception.rlf,
+          service: parseDistribution(this.config.serviceTime.service.rlf)
+        }
+      }
+      if (status === MessageStatus.DELAY) {
+        return {
+          reception: this.config.serviceTime.reception.rla,
+          service: parseDistribution(this.config.serviceTime.service.rla)
+        }
+      }
+    }
+    if (type === MessageType.RR) {
+      if (status === MessageStatus.SUCCESS) {
+        return {
+          reception: this.config.serviceTime.reception.rrs,
+          service: parseDistribution(this.config.serviceTime.service.rrs)
+        }
+      }
+      if (status === MessageStatus.FAILURE) {
+        return {
+          reception: this.config.serviceTime.reception.rrf,
+          service: parseDistribution(this.config.serviceTime.service.rrf)
+        }
+      }
+      if (status === MessageStatus.DELAY) {
+        return {
+          reception: this.config.serviceTime.reception.rra,
+          service: parseDistribution(this.config.serviceTime.service.rra)
+        }
+      }
+    }
   }
 
   generateMessage() {
     const messageType = Sort.messageType(this.config.trafficVolumn)
     const messageStatus = Sort.messageStatus(this.config.sfaTaxs, messageType)
+    const messageTimes = this.messageTimes(messageType, messageStatus)
 
     let arrive = messageType.charAt(1) === 'L' ? Distribution.expo(this.config.arriveTime.local) : Distribution.expo(this.config.arriveTime.remote)
     let message = new EventMessage(++this.lastMessage.id,
                                    this.lastMessage.execTime + arrive,
-                                   Distribution.uniform(2, 4),
-                                   Distribution.uniform(5, 9),
+                                   messageTimes.reception,
+                                   messageTimes.service,
                                    messageType,
                                    messageStatus,
                                    this.config.sfaTaxs,
@@ -36,12 +119,15 @@ class Simulator {
   }
 
   start() {
+   const messageType = Sort.messageType(this.config.trafficVolumn)
+   const messageStatus = Sort.messageStatus(this.config.sfaTaxs, messageType)
+
    this.lastMessage = new EventMessage(0,
                                        0,
                                        Distribution.uniform(2, 4),
                                        Distribution.uniform(5, 9),
-                                       Sort.messageType(this.config.trafficVolumn),
-                                       Sort.messageStatus(this.config.sfaTaxs),
+                                       messageType,
+                                       messageStatus,
                                        this.config.sfaTaxs,
                                        MessageState.RECEPTION)
 

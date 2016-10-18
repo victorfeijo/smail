@@ -107,18 +107,18 @@
 	var serviceTime = function serviceTime() {
 	  return {
 	    reception: {
-	      lls: $('#receptionCenterLLS').val(),
-	      llf: $('#receptionCenterLLF').val(),
-	      lla: $('#receptionCenterLLA').val(),
-	      lrs: $('#receptionCenterLRS').val(),
-	      lrf: $('#receptionCenterLRF').val(),
-	      lra: $('#receptionCenterLRA').val(),
-	      rls: $('#receptionCenterRLS').val(),
-	      rlf: $('#receptionCenterRLF').val(),
-	      rla: $('#receptionCenterRLA').val(),
-	      rrs: $('#receptionCenterRRS').val(),
-	      rrf: $('#receptionCenterRRF').val(),
-	      rra: $('#receptionCenterRRA').val()
+	      lls: parseFloat($('#receptionCenterLLS').val()),
+	      llf: parseFloat($('#receptionCenterLLF').val()),
+	      lla: parseFloat($('#receptionCenterLLA').val()),
+	      lrs: parseFloat($('#receptionCenterLRS').val()),
+	      lrf: parseFloat($('#receptionCenterLRF').val()),
+	      lra: parseFloat($('#receptionCenterLRA').val()),
+	      rls: parseFloat($('#receptionCenterRLS').val()),
+	      rlf: parseFloat($('#receptionCenterRLF').val()),
+	      rla: parseFloat($('#receptionCenterRLA').val()),
+	      rrs: parseFloat($('#receptionCenterRRS').val()),
+	      rrf: parseFloat($('#receptionCenterRRF').val()),
+	      rra: parseFloat($('#receptionCenterRRA').val())
 	    },
 	    service: {
 	      lls: $('#serviceCenterLLS').val(),
@@ -191,24 +191,113 @@
 	    this.currentTime = 0;
 	  }
 	
+	  // Big method because theres a lot of options to choose on users interface
+	  // Returns a object {reception, service} within time based on the type and status
+	
+	
 	  _createClass(Simulator, [{
-	    key: 'serviceTime',
-	    value: function serviceTime(type, status) {}
+	    key: 'messageTimes',
+	    value: function messageTimes(type, status) {
+	      if (type === _Enum.MessageType.LL) {
+	        if (status === _Enum.MessageStatus.SUCCESS) {
+	          return {
+	            reception: this.config.serviceTime.reception.lls,
+	            service: (0, _Calculus.parseDistribution)(this.config.serviceTime.service.lls)
+	          };
+	        }
+	        if (status === _Enum.MessageStatus.FAILURE) {
+	          return {
+	            reception: this.config.serviceTime.reception.llf,
+	            service: (0, _Calculus.parseDistribution)(this.config.serviceTime.service.llf)
+	          };
+	        }
+	        if (status === _Enum.MessageStatus.DELAY) {
+	          return {
+	            reception: this.config.serviceTime.reception.lla,
+	            service: (0, _Calculus.parseDistribution)(this.config.serviceTime.service.lla)
+	          };
+	        }
+	      }
+	      if (type === _Enum.MessageType.LR) {
+	        if (status === _Enum.MessageStatus.SUCCESS) {
+	          return {
+	            reception: this.config.serviceTime.reception.lrs,
+	            service: (0, _Calculus.parseDistribution)(this.config.serviceTime.service.lrs)
+	          };
+	        }
+	        if (status === _Enum.MessageStatus.FAILURE) {
+	          return {
+	            reception: this.config.serviceTime.reception.lrf,
+	            service: (0, _Calculus.parseDistribution)(this.config.serviceTime.service.lrf)
+	          };
+	        }
+	        if (status === _Enum.MessageStatus.DELAY) {
+	          return {
+	            reception: this.config.serviceTime.reception.lra,
+	            service: (0, _Calculus.parseDistribution)(this.config.serviceTime.service.lra)
+	          };
+	        }
+	      }
+	      if (type === _Enum.MessageType.RL) {
+	        if (status === _Enum.MessageStatus.SUCCESS) {
+	          return {
+	            reception: this.config.serviceTime.reception.rls,
+	            service: (0, _Calculus.parseDistribution)(this.config.serviceTime.service.rls)
+	          };
+	        }
+	        if (status === _Enum.MessageStatus.FAILURE) {
+	          return {
+	            reception: this.config.serviceTime.reception.rlf,
+	            service: (0, _Calculus.parseDistribution)(this.config.serviceTime.service.rlf)
+	          };
+	        }
+	        if (status === _Enum.MessageStatus.DELAY) {
+	          return {
+	            reception: this.config.serviceTime.reception.rla,
+	            service: (0, _Calculus.parseDistribution)(this.config.serviceTime.service.rla)
+	          };
+	        }
+	      }
+	      if (type === _Enum.MessageType.RR) {
+	        if (status === _Enum.MessageStatus.SUCCESS) {
+	          return {
+	            reception: this.config.serviceTime.reception.rrs,
+	            service: (0, _Calculus.parseDistribution)(this.config.serviceTime.service.rrs)
+	          };
+	        }
+	        if (status === _Enum.MessageStatus.FAILURE) {
+	          return {
+	            reception: this.config.serviceTime.reception.rrf,
+	            service: (0, _Calculus.parseDistribution)(this.config.serviceTime.service.rrf)
+	          };
+	        }
+	        if (status === _Enum.MessageStatus.DELAY) {
+	          return {
+	            reception: this.config.serviceTime.reception.rra,
+	            service: (0, _Calculus.parseDistribution)(this.config.serviceTime.service.rra)
+	          };
+	        }
+	      }
+	    }
 	  }, {
 	    key: 'generateMessage',
 	    value: function generateMessage() {
 	      var messageType = _Calculus.Sort.messageType(this.config.trafficVolumn);
 	      var messageStatus = _Calculus.Sort.messageStatus(this.config.sfaTaxs, messageType);
+	      var messageTimes = this.messageTimes(messageType, messageStatus);
 	
 	      var arrive = messageType.charAt(1) === 'L' ? _Calculus.Distribution.expo(this.config.arriveTime.local) : _Calculus.Distribution.expo(this.config.arriveTime.remote);
-	      var message = new _EventMessage2.default(++this.lastMessage.id, this.lastMessage.execTime + arrive, _Calculus.Distribution.uniform(2, 4), _Calculus.Distribution.uniform(5, 9), messageType, messageStatus, this.config.sfaTaxs, _Enum.MessageState.RECEPTION);
+	      var message = new _EventMessage2.default(++this.lastMessage.id, this.lastMessage.execTime + arrive, messageTimes.reception, messageTimes.service, messageType, messageStatus, this.config.sfaTaxs, _Enum.MessageState.RECEPTION);
 	      this.eventQueue.add(message);
 	      this.lastMessage = message;
 	    }
 	  }, {
 	    key: 'start',
 	    value: function start() {
-	      this.lastMessage = new _EventMessage2.default(0, 0, _Calculus.Distribution.uniform(2, 4), _Calculus.Distribution.uniform(5, 9), _Calculus.Sort.messageType(this.config.trafficVolumn), _Calculus.Sort.messageStatus(this.config.sfaTaxs), this.config.sfaTaxs, _Enum.MessageState.RECEPTION);
+	      var messageType = _Calculus.Sort.messageType(this.config.trafficVolumn);
+	      var messageStatus = _Calculus.Sort.messageStatus(this.config.sfaTaxs, messageType);
+	
+	      this.lastMessage = new _EventMessage2.default(0, 0, _Calculus.Distribution.uniform(2, 4), _Calculus.Distribution.uniform(5, 9), messageType, messageStatus, this.config.sfaTaxs, _Enum.MessageState.RECEPTION);
 	
 	      this.eventQueue.add(this.lastMessage);
 	      this.run();
@@ -605,6 +694,11 @@
 	
 	var parseDistribution = exports.parseDistribution = function parseDistribution(expression) {
 	  var match = /(\w+)\((.*)\)/i.exec(expression);
+	
+	  if (match === null) {
+	    return Distribution.uniform(3, 7);
+	  }
+	
 	  var distribution = match[1];
 	  var params = match[2].split(';');
 	
