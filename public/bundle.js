@@ -54,7 +54,7 @@
 	
 	var _SimulatorConfig2 = _interopRequireDefault(_SimulatorConfig);
 	
-	var _Calculus = __webpack_require__(7);
+	var _Calculus = __webpack_require__(6);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
@@ -167,11 +167,11 @@
 	
 	var _ServiceCenter2 = _interopRequireDefault(_ServiceCenter);
 	
-	var _Reception = __webpack_require__(6);
+	var _Reception = __webpack_require__(7);
 	
 	var _Reception2 = _interopRequireDefault(_Reception);
 	
-	var _Calculus = __webpack_require__(7);
+	var _Calculus = __webpack_require__(6);
 	
 	var _Enum = __webpack_require__(3);
 	
@@ -192,39 +192,23 @@
 	  }
 	
 	  _createClass(Simulator, [{
-	    key: 'sortMessageType',
-	    value: function sortMessageType() {
-	      var ll = this.config.trafficVolumn.ll;
-	      var lr = this.config.trafficVolumn.lr;
-	      var rl = this.config.trafficVolumn.rl;
-	      var rr = this.config.trafficVolumn.rr;
-	      var rand = Math.random() * 100;
-	
-	      if (rand <= ll) {
-	        return _Enum.MessageType.LL;
-	      }
-	      if (rand <= ll + lr) {
-	        return _Enum.MessageType.LR;
-	      }
-	      if (rand <= ll + lr + rl) {
-	        return _Enum.MessageType.RL;
-	      }
-	
-	      return _Enum.MessageType.RR;
-	    }
+	    key: 'serviceTime',
+	    value: function serviceTime(type, status) {}
 	  }, {
 	    key: 'generateMessage',
 	    value: function generateMessage() {
-	      var messageType = this.sortMessageType();
+	      var messageType = _Calculus.Sort.messageType(this.config.trafficVolumn);
+	      var messageStatus = _Calculus.Sort.messageStatus(this.config.sfaTaxs, messageType);
+	
 	      var arrive = messageType.charAt(1) === 'L' ? _Calculus.Distribution.expo(this.config.arriveTime.local) : _Calculus.Distribution.expo(this.config.arriveTime.remote);
-	      var message = new _EventMessage2.default(++this.lastMessage.id, this.lastMessage.execTime + arrive, _Calculus.Distribution.uniform(2, 4), _Calculus.Distribution.uniform(5, 9), messageType, _Enum.MessageState.RECEPTION, this.config.sfaTaxs);
+	      var message = new _EventMessage2.default(++this.lastMessage.id, this.lastMessage.execTime + arrive, _Calculus.Distribution.uniform(2, 4), _Calculus.Distribution.uniform(5, 9), messageType, messageStatus, this.config.sfaTaxs, _Enum.MessageState.RECEPTION);
 	      this.eventQueue.add(message);
 	      this.lastMessage = message;
 	    }
 	  }, {
 	    key: 'start',
 	    value: function start() {
-	      this.lastMessage = new _EventMessage2.default(0, 0, _Calculus.Distribution.uniform(2, 4), _Calculus.Distribution.uniform(5, 9), this.sortMessageType(), _Enum.MessageState.RECEPTION, this.config.sfaTaxs);
+	      this.lastMessage = new _EventMessage2.default(0, 0, _Calculus.Distribution.uniform(2, 4), _Calculus.Distribution.uniform(5, 9), _Calculus.Sort.messageType(this.config.trafficVolumn), _Calculus.Sort.messageStatus(this.config.sfaTaxs), this.config.sfaTaxs, _Enum.MessageState.RECEPTION);
 	
 	      this.eventQueue.add(this.lastMessage);
 	      this.run();
@@ -248,7 +232,7 @@
 	      nextEvent.run(this.receptionCenter, this.localServiceCenter, this.remoteServiceCenter);
 	
 	      setTimeout(function () {
-	        var simLog = 'ID: ' + nextEvent.id + ' Estado: ' + nextEvent.state + ' Tipo: ' + nextEvent.type;
+	        var simLog = 'ID: ' + nextEvent.id + ' Estado: ' + nextEvent.state + ' Tipo: ' + nextEvent.type + ' Status: ' + nextEvent.status;
 	
 	        $('#simulation').append('<option>' + simLog + '</option>');
 	
@@ -294,18 +278,17 @@
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 	
 	var EventMessage = function () {
-	  function EventMessage(id, execTime, recepTime, servTime, type, state, statusRate, status) {
+	  function EventMessage(id, execTime, recepTime, servTime, type, status, sfaTaxs, state) {
 	    _classCallCheck(this, EventMessage);
 	
 	    this.id = id;
-	    this.statusRate = statusRate;
 	    this.execTime = execTime;
 	    this.recepTime = recepTime;
 	    this.servTime = servTime;
 	    this.type = type;
+	    this.status = status;
+	    this.sfaTaxs = sfaTaxs;
 	    this.state = state;
-	
-	    this.status = this.state === _Enum.MessageState.RECEPTION ? this.rate() : status;
 	  }
 	
 	  _createClass(EventMessage, [{
@@ -325,44 +308,6 @@
 	        } else {
 	          remoteServiceCenter.finish(this);
 	        }
-	      }
-	    }
-	  }, {
-	    key: 'rate',
-	    value: function rate() {
-	      var success = 0,
-	          failure = 0,
-	          delay = 0;
-	
-	      if (this.type === _Enum.MessageType.LL) {
-	        success = this.statusRate.success.ll;
-	        failure = this.statusRate.failure.ll;
-	        delay = this.statusRate.delay.ll;
-	      }
-	      if (this.type === _Enum.MessageType.LR) {
-	        success = this.statusRate.success.lr;
-	        failure = this.statusRate.failure.lr;
-	        delay = this.statusRate.delay.lr;
-	      }
-	      if (this.type === _Enum.MessageType.RL) {
-	        success = this.statusRate.success.rl;
-	        failure = this.statusRate.failure.rl;
-	        delay = this.statusRate.delay.rl;
-	      }
-	      if (this.type === _Enum.MessageType.RR) {
-	        success = this.statusRate.success.rr;
-	        failure = this.statusRate.failure.rr;
-	        delay = this.statusRate.delay.rr;
-	      }
-	
-	      var rand = Math.random() * 100;
-	
-	      if (rand <= success) {
-	        return _Enum.MessageStatus.SUCCESS;
-	      } else if (rand <= success + failure) {
-	        return _Enum.MessageStatus.FAILURE;
-	      } else if (rand <= success + failure + delay) {
-	        return _Enum.MessageStatus.DELAY;
 	      }
 	    }
 	  }, {
@@ -483,6 +428,8 @@
 	
 	var _Enum = __webpack_require__(3);
 	
+	var _Calculus = __webpack_require__(6);
+	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -504,7 +451,7 @@
 	    key: 'receive',
 	    value: function receive(eventMessage) {
 	      if (this.busyServers < this.servers) {
-	        this.eventQueue.add(new _EventMessage2.default(eventMessage.id, eventMessage.execTime + eventMessage.servTime, eventMessage.recepTime, eventMessage.servTime, eventMessage.type, _Enum.MessageState.FINISH, eventMessage.statusRate, eventMessage.status));
+	        this.eventQueue.add(new _EventMessage2.default(eventMessage.id, eventMessage.execTime + eventMessage.servTime, eventMessage.recepTime, eventMessage.servTime, eventMessage.type, eventMessage.status, eventMessage.sfaTaxs, _Enum.MessageState.FINISH));
 	        this.busyServers++;
 	      } else {
 	        this.waitingQueue.push(eventMessage);
@@ -517,7 +464,7 @@
 	
 	      if (this.waitingQueue.length > 0) {
 	        var next = this.nextWaitingQueue();
-	        this.eventQueue.add(new _EventMessage2.default(next.id, eventMessage.execTime + next.servTime, next.recepTime, next.servTime, next.type, _Enum.MessageState.FINISH, next.statusRate, next.status));
+	        this.eventQueue.add(new _EventMessage2.default(next.id, eventMessage.execTime + next.servTime, next.recepTime, next.servTime, next.type, next.status, next.sfaTaxs, _Enum.MessageState.FINISH));
 	        this.busyServers++;
 	      }
 	
@@ -537,9 +484,9 @@
 	    key: 'delayMessage',
 	    value: function delayMessage(eventMessage) {
 	      this.delay++;
+	      var status = _Calculus.Sort.messageStatus(eventMessage.sfaTaxs, eventMessage.type);
 	
-	      var status = eventMessage.rate();
-	      var delayed = new _EventMessage2.default(eventMessage.id, eventMessage.execTime, eventMessage.recepTime, eventMessage.servTime, eventMessage.type, _Enum.MessageState.SERVICE, eventMessage.statusRate, status);
+	      var delayed = new _EventMessage2.default(eventMessage.id, eventMessage.execTime, eventMessage.recepTime, eventMessage.servTime, eventMessage.type, status, eventMessage.sfaTaxs, _Enum.MessageState.SERVICE);
 	
 	      this.eventQueue.add(delayed);
 	    }
@@ -564,51 +511,10 @@
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
-	
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-	
-	var _ServiceCenter = __webpack_require__(5);
-	
-	var _ServiceCenter2 = _interopRequireDefault(_ServiceCenter);
-	
-	var _EventMessage = __webpack_require__(2);
-	
-	var _EventMessage2 = _interopRequireDefault(_EventMessage);
+	exports.parseDistribution = exports.Sort = exports.Distribution = undefined;
 	
 	var _Enum = __webpack_require__(3);
 	
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-	
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-	
-	var Reception = function () {
-	  function Reception(eventQueue) {
-	    _classCallCheck(this, Reception);
-	
-	    this.eventQueue = eventQueue;
-	  }
-	
-	  _createClass(Reception, [{
-	    key: 'receive',
-	    value: function receive(eventMessage) {
-	      this.eventQueue.add(new _EventMessage2.default(eventMessage.id, eventMessage.execTime + eventMessage.recepTime, eventMessage.recepTime, eventMessage.servTime, eventMessage.type, _Enum.MessageState.SERVICE, eventMessage.statusRate, eventMessage.status));
-	    }
-	  }]);
-	
-	  return Reception;
-	}();
-	
-	exports.default = Reception;
-
-/***/ },
-/* 7 */
-/***/ function(module, exports) {
-
-	'use strict';
-	
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
 	var Distribution = exports.Distribution = {
 	  normal: function normal(a, b) {
 	    var u1 = Math.random();
@@ -636,6 +542,64 @@
 	    var u = Math.random();
 	
 	    return -1 / l * Math.log(1 - u);
+	  }
+	};
+	
+	var Sort = exports.Sort = {
+	  messageType: function messageType(trafficVolumn) {
+	    var ll = trafficVolumn.ll;
+	    var lr = trafficVolumn.lr;
+	    var rl = trafficVolumn.rl;
+	    var rr = trafficVolumn.rr;
+	    var rand = Math.random() * 100;
+	
+	    if (rand <= ll) {
+	      return _Enum.MessageType.LL;
+	    }
+	    if (rand <= ll + lr) {
+	      return _Enum.MessageType.LR;
+	    }
+	    if (rand <= ll + lr + rl) {
+	      return _Enum.MessageType.RL;
+	    }
+	
+	    return _Enum.MessageType.RR;
+	  },
+	  messageStatus: function messageStatus(sfaTaxs, type) {
+	    var success = 0,
+	        failure = 0,
+	        delay = 0;
+	
+	    if (type === _Enum.MessageType.LL) {
+	      success = sfaTaxs.success.ll;
+	      failure = sfaTaxs.failure.ll;
+	      delay = sfaTaxs.delay.ll;
+	    }
+	    if (type === _Enum.MessageType.LR) {
+	      success = sfaTaxs.success.lr;
+	      failure = sfaTaxs.failure.lr;
+	      delay = sfaTaxs.delay.lr;
+	    }
+	    if (type === _Enum.MessageType.RL) {
+	      success = sfaTaxs.success.rl;
+	      failure = sfaTaxs.failure.rl;
+	      delay = sfaTaxs.delay.rl;
+	    }
+	    if (type === _Enum.MessageType.RR) {
+	      success = sfaTaxs.success.rr;
+	      failure = sfaTaxs.failure.rr;
+	      delay = sfaTaxs.delay.rr;
+	    }
+	
+	    var rand = Math.random() * 100;
+	
+	    if (rand <= success) {
+	      return _Enum.MessageStatus.SUCCESS;
+	    } else if (rand <= success + failure) {
+	      return _Enum.MessageStatus.FAILURE;
+	    } else if (rand <= success + failure + delay) {
+	      return _Enum.MessageStatus.DELAY;
+	    }
 	  }
 	};
 	
@@ -672,6 +636,51 @@
 	
 	  return 0;
 	};
+
+/***/ },
+/* 7 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	
+	var _ServiceCenter = __webpack_require__(5);
+	
+	var _ServiceCenter2 = _interopRequireDefault(_ServiceCenter);
+	
+	var _EventMessage = __webpack_require__(2);
+	
+	var _EventMessage2 = _interopRequireDefault(_EventMessage);
+	
+	var _Enum = __webpack_require__(3);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	var Reception = function () {
+	  function Reception(eventQueue) {
+	    _classCallCheck(this, Reception);
+	
+	    this.eventQueue = eventQueue;
+	  }
+	
+	  _createClass(Reception, [{
+	    key: 'receive',
+	    value: function receive(eventMessage) {
+	      this.eventQueue.add(new _EventMessage2.default(eventMessage.id, eventMessage.execTime + eventMessage.recepTime, eventMessage.recepTime, eventMessage.servTime, eventMessage.type, eventMessage.status, eventMessage.sfaTaxs, _Enum.MessageState.SERVICE));
+	    }
+	  }]);
+	
+	  return Reception;
+	}();
+	
+	exports.default = Reception;
 
 /***/ },
 /* 8 */

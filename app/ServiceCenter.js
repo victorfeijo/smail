@@ -1,5 +1,6 @@
 import EventMessage from './EventMessage'
 import { MessageState, MessageStatus } from './Enum'
+import { Sort } from './Calculus'
 
 class ServiceCenter {
   constructor(eventQueue, servers) {
@@ -19,9 +20,9 @@ class ServiceCenter {
                                            eventMessage.recepTime,
                                            eventMessage.servTime,
                                            eventMessage.type,
+                                           eventMessage.status,
+                                           eventMessage.sfaTaxs,
                                            MessageState.FINISH,
-                                           eventMessage.statusRate,
-                                           eventMessage.status
                                            ))
       this.busyServers++
     }
@@ -40,9 +41,9 @@ class ServiceCenter {
                                            next.recepTime,
                                            next.servTime,
                                            next.type,
+                                           next.status,
+                                           next.sfaTaxs,
                                            MessageState.FINISH,
-                                           next.statusRate,
-                                           next.status
                                            ))
       this.busyServers++
     }
@@ -58,16 +59,16 @@ class ServiceCenter {
 
   delayMessage(eventMessage) {
     this.delay++
+    let status = Sort.messageStatus(eventMessage.sfaTaxs, eventMessage.type)
 
-    let status = eventMessage.rate()
     let delayed = new EventMessage(eventMessage.id,
                                    eventMessage.execTime,
                                    eventMessage.recepTime,
                                    eventMessage.servTime,
                                    eventMessage.type,
-                                   MessageState.SERVICE,
-                                   eventMessage.statusRate,
-                                   status
+                                   status,
+                                   eventMessage.sfaTaxs,
+                                   MessageState.SERVICE
                                    )
 
     this.eventQueue.add(delayed)

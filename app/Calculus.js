@@ -1,3 +1,5 @@
+import { MessageType, MessageStatus } from './Enum'
+
 export const Distribution = {
   normal: (a, b) => {
     const u1 = Math.random()
@@ -26,6 +28,58 @@ export const Distribution = {
 
     return (-1/l) * Math.log(1-u)
   },
+}
+
+export const Sort = {
+  messageType: (trafficVolumn) => {
+    const ll = trafficVolumn.ll
+    const lr = trafficVolumn.lr
+    const rl = trafficVolumn.rl
+    const rr = trafficVolumn.rr
+    const rand = Math.random()*100
+
+    if (rand <= ll) { return MessageType.LL }
+    if (rand <= ll + lr) { return MessageType.LR }
+    if (rand <= ll + lr + rl) { return MessageType.RL }
+
+    return MessageType.RR
+  },
+  messageStatus: (sfaTaxs, type) => {
+    let success = 0, failure = 0, delay = 0
+
+    if (type === MessageType.LL) {
+      success = sfaTaxs.success.ll
+      failure = sfaTaxs.failure.ll
+      delay = sfaTaxs.delay.ll
+    }
+    if (type === MessageType.LR) {
+      success = sfaTaxs.success.lr
+      failure = sfaTaxs.failure.lr
+      delay = sfaTaxs.delay.lr
+    }
+    if (type === MessageType.RL) {
+      success = sfaTaxs.success.rl
+      failure = sfaTaxs.failure.rl
+      delay = sfaTaxs.delay.rl
+    }
+    if (type === MessageType.RR) {
+      success = sfaTaxs.success.rr
+      failure = sfaTaxs.failure.rr
+      delay = sfaTaxs.delay.rr
+    }
+
+    const rand = Math.random()*100
+
+    if (rand <= success) {
+      return MessageStatus.SUCCESS
+    }
+    else if (rand <= success + failure) {
+      return MessageStatus.FAILURE
+    }
+    else if (rand <= success + failure + delay) {
+      return MessageStatus.DELAY
+    }
+  }
 }
 
 export const parseDistribution = (expression) => {

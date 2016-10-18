@@ -13,9 +13,9 @@ class Reception {
                                          eventMessage.recepTime,
                                          eventMessage.servTime,
                                          eventMessage.type,
+                                         eventMessage.status,
+                                         eventMessage.sfaTaxs,
                                          MessageState.SERVICE,
-                                         eventMessage.statusRate,
-                                         eventMessage.status
                                          ))
   }
 }
