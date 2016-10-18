@@ -34,6 +34,7 @@ class Simulator {
     let arrive = messageType.charAt(1) === 'L' ? Distribution.expo(this.config.arriveTime.local) : Distribution.expo(this.config.arriveTime.remote)
     let message = new EventMessage(++this.lastMessage.id,
                                    this.lastMessage.execTime + arrive,
+                                   Distribution.uniform(2, 4),
                                    Distribution.uniform(5, 9),
                                    messageType,
                                    MessageState.RECEPTION,
@@ -45,6 +46,7 @@ class Simulator {
   start() {
    this.lastMessage = new EventMessage(0,
                                        0,
+                                       Distribution.uniform(2, 4),
                                        Distribution.uniform(5, 9),
                                        this.sortMessageType(),
                                        MessageState.RECEPTION,
@@ -74,8 +76,12 @@ class Simulator {
       let simLog = `ID: ${nextEvent.id} Estado: ${nextEvent.state} Tipo: ${nextEvent.type}`
 
       $('#simulation').append(`<option>${simLog}</option>`)
+
+      let percent = `${parseInt(nextEvent.execTime/10)}%`
+      $('#time').css('width', percent)
+
       this.run()
-    }, 100)
+    }, 1)
   }
 
   finish() {

@@ -217,14 +217,14 @@
 	    value: function generateMessage() {
 	      var messageType = this.sortMessageType();
 	      var arrive = messageType.charAt(1) === 'L' ? _Calculus.Distribution.expo(this.config.arriveTime.local) : _Calculus.Distribution.expo(this.config.arriveTime.remote);
-	      var message = new _EventMessage2.default(++this.lastMessage.id, this.lastMessage.execTime + arrive, _Calculus.Distribution.uniform(5, 9), messageType, _Enum.MessageState.RECEPTION, this.config.sfaTaxs);
+	      var message = new _EventMessage2.default(++this.lastMessage.id, this.lastMessage.execTime + arrive, _Calculus.Distribution.uniform(2, 4), _Calculus.Distribution.uniform(5, 9), messageType, _Enum.MessageState.RECEPTION, this.config.sfaTaxs);
 	      this.eventQueue.add(message);
 	      this.lastMessage = message;
 	    }
 	  }, {
 	    key: 'start',
 	    value: function start() {
-	      this.lastMessage = new _EventMessage2.default(0, 0, _Calculus.Distribution.uniform(5, 9), this.sortMessageType(), _Enum.MessageState.RECEPTION, this.config.sfaTaxs);
+	      this.lastMessage = new _EventMessage2.default(0, 0, _Calculus.Distribution.uniform(2, 4), _Calculus.Distribution.uniform(5, 9), this.sortMessageType(), _Enum.MessageState.RECEPTION, this.config.sfaTaxs);
 	
 	      this.eventQueue.add(this.lastMessage);
 	      this.run();
@@ -251,8 +251,12 @@
 	        var simLog = 'ID: ' + nextEvent.id + ' Estado: ' + nextEvent.state + ' Tipo: ' + nextEvent.type;
 	
 	        $('#simulation').append('<option>' + simLog + '</option>');
+	
+	        var percent = parseInt(nextEvent.execTime / 10) + '%';
+	        $('#time').css('width', percent);
+	
 	        _this.run();
-	      }, 100);
+	      }, 1);
 	    }
 	  }, {
 	    key: 'finish',
@@ -290,15 +294,18 @@
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 	
 	var EventMessage = function () {
-	  function EventMessage(id, execTime, servTime, type, state, statusRate) {
+	  function EventMessage(id, execTime, recepTime, servTime, type, state, statusRate, status) {
 	    _classCallCheck(this, EventMessage);
 	
 	    this.id = id;
+	    this.statusRate = statusRate;
 	    this.execTime = execTime;
+	    this.recepTime = recepTime;
 	    this.servTime = servTime;
 	    this.type = type;
 	    this.state = state;
-	    this.statusRate = statusRate;
+	
+	    this.status = this.state === _Enum.MessageState.RECEPTION ? this.rate() : status;
 	  }
 	
 	  _createClass(EventMessage, [{
@@ -358,6 +365,12 @@
 	        return _Enum.MessageStatus.DELAY;
 	      }
 	    }
+	  }, {
+	    key: 'servTime',
+	    value: function servTime() {}
+	  }, {
+	    key: 'receptionTime',
+	    value: function receptionTime() {}
 	  }]);
 	
 	  return EventMessage;
@@ -491,7 +504,7 @@
 	    key: 'receive',
 	    value: function receive(eventMessage) {
 	      if (this.busyServers < this.servers) {
-	        this.eventQueue.add(new _EventMessage2.default(eventMessage.id, eventMessage.servTime + eventMessage.execTime, eventMessage.servTime, eventMessage.type, _Enum.MessageState.FINISH, eventMessage.statusRate));
+	        this.eventQueue.add(new _EventMessage2.default(eventMessage.id, eventMessage.execTime + eventMessage.servTime, eventMessage.recepTime, eventMessage.servTime, eventMessage.type, _Enum.MessageState.FINISH, eventMessage.statusRate, eventMessage.status));
 	        this.busyServers++;
 	      } else {
 	        this.waitingQueue.push(eventMessage);
@@ -500,25 +513,23 @@
 	  }, {
 	    key: 'finish',
 	    value: function finish(eventMessage) {
-	      var status = eventMessage.rate();
-	
 	      this.busyServers--;
 	
 	      if (this.waitingQueue.length > 0) {
 	        var next = this.nextWaitingQueue();
-	        this.eventQueue.add(new _EventMessage2.default(next.id, eventMessage.execTime + next.servTime, next.servTime, next.type, _Enum.MessageState.FINISH, next.statusRate));
+	        this.eventQueue.add(new _EventMessage2.default(next.id, eventMessage.execTime + next.servTime, next.recepTime, next.servTime, next.type, _Enum.MessageState.FINISH, next.statusRate, next.status));
 	        this.busyServers++;
 	      }
 	
-	      if (status === _Enum.MessageStatus.DELAY) {
+	      if (eventMessage.status === _Enum.MessageStatus.DELAY) {
 	        this.delayMessage(eventMessage);
 	        return;
 	      }
 	
-	      if (status === _Enum.MessageStatus.SUCCESS) {
+	      if (eventMessage.status === _Enum.MessageStatus.SUCCESS) {
 	        this.success++;
 	      }
-	      if (status === _Enum.MessageStatus.FAILURE) {
+	      if (eventMessage.status === _Enum.MessageStatus.FAILURE) {
 	        this.failure++;
 	      }
 	    }
@@ -526,7 +537,11 @@
 	    key: 'delayMessage',
 	    value: function delayMessage(eventMessage) {
 	      this.delay++;
-	      this.eventQueue.add(new _EventMessage2.default(eventMessage.id, eventMessage.execTime, eventMessage.servTime, eventMessage.type, _Enum.MessageState.SERVICE, eventMessage.statusRate));
+	
+	      var status = eventMessage.rate();
+	      var delayed = new _EventMessage2.default(eventMessage.id, eventMessage.execTime, eventMessage.recepTime, eventMessage.servTime, eventMessage.type, _Enum.MessageState.SERVICE, eventMessage.statusRate, status);
+	
+	      this.eventQueue.add(delayed);
 	    }
 	  }, {
 	    key: 'nextWaitingQueue',
@@ -576,7 +591,7 @@
 	  _createClass(Reception, [{
 	    key: 'receive',
 	    value: function receive(eventMessage) {
-	      this.eventQueue.add(new _EventMessage2.default(eventMessage.id, eventMessage.execTime + eventMessage.servTime, eventMessage.servTime, eventMessage.type, _Enum.MessageState.SERVICE, eventMessage.statusRate));
+	      this.eventQueue.add(new _EventMessage2.default(eventMessage.id, eventMessage.execTime + eventMessage.recepTime, eventMessage.recepTime, eventMessage.servTime, eventMessage.type, _Enum.MessageState.SERVICE, eventMessage.statusRate, eventMessage.status));
 	    }
 	  }]);
 	

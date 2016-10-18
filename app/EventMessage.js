@@ -2,13 +2,16 @@ import { MessageState, MessageType, MessageStatus } from './Enum'
 import EventQueue from './EventQueue'
 
 class EventMessage {
-  constructor(id, execTime, servTime, type, state, statusRate) {
+  constructor(id, execTime, recepTime, servTime, type, state, statusRate, status) {
     this.id = id
+    this.statusRate = statusRate
     this.execTime = execTime
+    this.recepTime = recepTime
     this.servTime = servTime
     this.type = type
     this.state = state
-    this.statusRate = statusRate
+
+    this.status = this.state === MessageState.RECEPTION ? this.rate() : status
   }
 
   run(receptionCenter, localServiceCenter, remoteServiceCenter) {
@@ -68,6 +71,13 @@ class EventMessage {
     else if (rand <= success + failure + delay) {
       return MessageStatus.DELAY
     }
+  }
+
+  servTime() {
+  }
+
+  receptionTime() {
+
   }
 }
 

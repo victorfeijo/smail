@@ -3,6 +3,11 @@ body {
   color: #303E96;
   text-align: center;
   margin: 0;
+  background-image: url("paper_fibers.png")
+}
+
+.legat {
+  background-image: url("groovepaper.png");
 }
 
 .column {
@@ -27,4 +32,6 @@ body {
 }
 
 #simulation {
+  width: 700px;
+  height: 300px;
 }

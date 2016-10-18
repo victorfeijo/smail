@@ -15,11 +15,13 @@ class ServiceCenter {
   receive(eventMessage) {
     if (this.busyServers < this.servers) {
       this.eventQueue.add(new EventMessage(eventMessage.id,
-                                           eventMessage.servTime + eventMessage.execTime,
+                                           eventMessage.execTime + eventMessage.servTime,
+                                           eventMessage.recepTime,
                                            eventMessage.servTime,
                                            eventMessage.type,
                                            MessageState.FINISH,
-                                           eventMessage.statusRate
+                                           eventMessage.statusRate,
+                                           eventMessage.status
                                            ))
       this.busyServers++
     }
@@ -29,41 +31,46 @@ class ServiceCenter {
   }
 
   finish(eventMessage) {
-    const status = eventMessage.rate()
-
     this.busyServers--
 
     if (this.waitingQueue.length > 0) {
       let next = this.nextWaitingQueue()
       this.eventQueue.add(new EventMessage(next.id,
                                            eventMessage.execTime + next.servTime,
+                                           next.recepTime,
                                            next.servTime,
                                            next.type,
                                            MessageState.FINISH,
-                                           next.statusRate
+                                           next.statusRate,
+                                           next.status
                                            ))
       this.busyServers++
     }
 
-    if (status === MessageStatus.DELAY) {
+    if (eventMessage.status === MessageStatus.DELAY) {
       this.delayMessage(eventMessage)
       return
     }
 
-    if (status === MessageStatus.SUCCESS) { this.success++ }
-    if (status === MessageStatus.FAILURE) { this.failure++ }
+    if (eventMessage.status === MessageStatus.SUCCESS) { this.success++ }
+    if (eventMessage.status === MessageStatus.FAILURE) { this.failure++ }
   }
 
   delayMessage(eventMessage) {
     this.delay++
-    this.eventQueue.add(new EventMessage(eventMessage.id,
-                                         eventMessage.execTime,
-                                         eventMessage.servTime,
-                                         eventMessage.type,
-                                         MessageState.SERVICE,
-                                         eventMessage.statusRate
-                                         ))
 
+    let status = eventMessage.rate()
+    let delayed = new EventMessage(eventMessage.id,
+                                   eventMessage.execTime,
+                                   eventMessage.recepTime,
+                                   eventMessage.servTime,
+                                   eventMessage.type,
+                                   MessageState.SERVICE,
+                                   eventMessage.statusRate,
+                                   status
+                                   )
+
+    this.eventQueue.add(delayed)
   }
 
   nextWaitingQueue() {

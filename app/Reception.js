@@ -9,11 +9,13 @@ class Reception {
 
   receive(eventMessage) {
     this.eventQueue.add(new EventMessage(eventMessage.id,
-                                         eventMessage.execTime + eventMessage.servTime,
+                                         eventMessage.execTime + eventMessage.recepTime,
+                                         eventMessage.recepTime,
                                          eventMessage.servTime,
                                          eventMessage.type,
                                          MessageState.SERVICE,
-                                         eventMessage.statusRate
+                                         eventMessage.statusRate,
+                                         eventMessage.status
                                          ))
   }
 }
