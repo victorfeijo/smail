@@ -7,72 +7,75 @@ import { MessageType, MessageState } from './Enum'
 
 class Simulator {
   constructor(config) {
+    this.config = config
     this.eventQueue = new EventQueue()
-    this.localServiceCenter = new ServiceCenter(this.eventQueue)
-    this.remoteServiceCenter = new ServiceCenter(this.eventQueue)
+    this.localServiceCenter = new ServiceCenter(this.eventQueue, this.config.serviceCenter.center1)
+    this.remoteServiceCenter = new ServiceCenter(this.eventQueue, this.config.serviceCenter.center2)
     this.receptionCenter = new Reception(this.eventQueue)
     this.currentTime = 0
-    this.config = config
   }
 
-  rateMessageType() {
+  sortMessageType() {
     const ll = this.config.trafficVolumn.ll
     const lr = this.config.trafficVolumn.lr
     const rl = this.config.trafficVolumn.rl
     const rr = this.config.trafficVolumn.rr
     const rand = Math.random()*100
 
-    if (rand <= ll) {
-      return MessageType.LL
-    }
-    if (rand <= ll + lr) {
-      return MessageType.LR
-    }
-    if (rand <= ll + lr + rl) {
-      return MessageType.RL
-    }
+    if (rand <= ll) { return MessageType.LL }
+    if (rand <= ll + lr) { return MessageType.LR }
+    if (rand <= ll + lr + rl) { return MessageType.RL }
 
     return MessageType.RR
   }
 
-  generateEvents(n) {
-    let arrival = 0
-
-    for (let i=0; i<n; i++) {
-      this.eventQueue.add(new EventMessage(i,
-                                           arrival,
-                                           Distribution.uniform(5, 9),
-                                           this.rateMessageType(),
-                                           MessageState.RECEPTION,
-                                           this.config.sfaTaxs))
-
-      arrival += Distribution.uniform(7, 12)
-    }
+  generateMessage() {
+    const messageType = this.sortMessageType()
+    let arrive = messageType.charAt(1) === 'L' ? Distribution.expo(this.config.arriveTime.local) : Distribution.expo(this.config.arriveTime.remote)
+    let message = new EventMessage(++this.lastMessage.id,
+                                   this.lastMessage.execTime + arrive,
+                                   Distribution.uniform(5, 9),
+                                   messageType,
+                                   MessageState.RECEPTION,
+                                   this.config.sfaTaxs)
+    this.eventQueue.add(message)
+    this.lastMessage = message
   }
 
   start() {
-   this.generateEvents(5)
+   this.lastMessage = new EventMessage(0,
+                                       0,
+                                       Distribution.uniform(5, 9),
+                                       this.sortMessageType(),
+                                       MessageState.RECEPTION,
+                                       this.config.sfaTaxs)
 
+   this.eventQueue.add(this.lastMessage)
    this.run()
   }
 
   run() {
-    if(this.eventQueue.isEmpty()) {
+    if(this.eventQueue.isEmpty() || this.currentTime > 1000) {
       this.finish()
 
       return
     }
 
+    this.generateMessage()
+
     let nextEvent = this.eventQueue.next()
+    this.currentTime = nextEvent.execTime
 
     nextEvent.run(this.receptionCenter,
                   this.localServiceCenter,
                   this.remoteServiceCenter)
 
     setTimeout(() => {
-      console.log(`execTime: ${nextEvent.execTime} msgId: ${nextEvent.id} state: ${nextEvent.state} type: ${nextEvent.type}`)
+      let simLog = `ID: ${nextEvent.id} Estado: ${nextEvent.state} Tipo: ${nextEvent.type}`
+
+      $('#simulation').append(`<option>${simLog}</option>`)
       this.run()
-    }, 1000)
+    }, 100)
   }
 
   finish() {

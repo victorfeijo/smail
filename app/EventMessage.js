@@ -14,21 +14,27 @@ class EventMessage {
   run(receptionCenter, localServiceCenter, remoteServiceCenter) {
     if (this.state === MessageState.RECEPTION) {
       receptionCenter.receive(this)
-    } else if (this.state === MessageState.SERVICE) {
-      if (this.type === MessageType.LL ||
-          this.type === MessageType.RL) {
+    }
+    else if (this.state === MessageState.SERVICE) {
+      if (this.type === MessageType.LL || this.type === MessageType.RL) {
         localServiceCenter.receive(this)
-      } else {
+      }
+      else {
         remoteServiceCenter.receive(this)
       }
-    } else if (this.state === MessageState.FINISH) {
+    }
+    else if (this.state === MessageState.FINISH) {
+      if (this.type === MessageType.LL || this.type === MessageType.RL) {
+        localServiceCenter.finish(this)
+      }
+      else {
+        remoteServiceCenter.finish(this)
+      }
     }
   }
 
   rate() {
-    let success = 0
-    let failure = 0
-    let delay = 0
+    let success = 0, failure = 0, delay = 0
 
     if (this.type === MessageType.LL) {
       success = this.statusRate.success.ll
@@ -53,11 +59,13 @@ class EventMessage {
 
     const rand = Math.random()*100
 
-    if (rand < success) {
+    if (rand <= success) {
       return MessageStatus.SUCCESS
-    } else if (rand >= success && rand < success + failure) {
+    }
+    else if (rand <= success + failure) {
       return MessageStatus.FAILURE
-    } else if (rand >= success + failure && rand < success + failure + delay) {
+    }
+    else if (rand <= success + failure + delay) {
       return MessageStatus.DELAY
     }
   }

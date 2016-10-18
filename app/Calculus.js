@@ -19,7 +19,7 @@ export const Distribution = {
       return a + Math.sqrt(u * (b-a) * (c-a))
     }
 
-    return a - Math.sqrt((1-u) * (c-b) * (c-a))
+    return c - Math.sqrt((1-u) * (c-b) * (c-a))
   },
   expo: (l) => {
     const u = Math.random()
@@ -37,15 +37,18 @@ export const parseDistribution = (expression) => {
     if (params.length !== 2) { return 0 }
 
     return Distribution.normal(parseFloat(params[0]), parseFloat(params[1]))
-  } else if (distribution.toLowerCase() === 'uniform') {
+  }
+  else if (distribution.toLowerCase() === 'uniform') {
     if (params.length !== 2) { return 0 }
 
     return Distribution.uniform(parseFloat(params[0]), parseFloat(params[1]))
-  } else if (distribution.toLowerCase() === 'triangular') {
+  }
+  else if (distribution.toLowerCase() === 'triangular') {
     if (params.length !== 3) { return 0 }
 
     return Distribution.triangular(parseFloat(params[0]), parseFloat(params[1]), parseFloat(params[2]))
-  } else if (distribution.toLowerCase() === 'expo') {
+  }
+  else if (distribution.toLowerCase() === 'expo') {
     if (params.length !== 1) { return 0 }
 
     return Distribution.expo(parseFloat(params[0]))

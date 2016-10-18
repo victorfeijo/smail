@@ -92,15 +92,15 @@
 	
 	var serviceCenter = function serviceCenter() {
 	  return {
-	    center1: $('#serviceCenter1').val(),
-	    center2: $('#serviceCenter2').val()
+	    center1: parseFloat($('#serviceCenter1').val()),
+	    center2: parseFloat($('#serviceCenter2').val())
 	  };
 	};
 	
 	var arriveTime = function arriveTime() {
 	  return {
-	    local: $('#arriveTime1').val(),
-	    remote: $('#arriveTime2').val()
+	    local: parseFloat($('#arriveTime1').val()),
+	    remote: parseFloat($('#arriveTime2').val())
 	  };
 	};
 	
@@ -183,17 +183,17 @@
 	  function Simulator(config) {
 	    _classCallCheck(this, Simulator);
 	
+	    this.config = config;
 	    this.eventQueue = new _EventQueue2.default();
-	    this.localServiceCenter = new _ServiceCenter2.default(this.eventQueue);
-	    this.remoteServiceCenter = new _ServiceCenter2.default(this.eventQueue);
+	    this.localServiceCenter = new _ServiceCenter2.default(this.eventQueue, this.config.serviceCenter.center1);
+	    this.remoteServiceCenter = new _ServiceCenter2.default(this.eventQueue, this.config.serviceCenter.center2);
 	    this.receptionCenter = new _Reception2.default(this.eventQueue);
 	    this.currentTime = 0;
-	    this.config = config;
 	  }
 	
 	  _createClass(Simulator, [{
-	    key: 'rateMessageType',
-	    value: function rateMessageType() {
+	    key: 'sortMessageType',
+	    value: function sortMessageType() {
 	      var ll = this.config.trafficVolumn.ll;
 	      var lr = this.config.trafficVolumn.lr;
 	      var rl = this.config.trafficVolumn.rl;
@@ -213,21 +213,20 @@
 	      return _Enum.MessageType.RR;
 	    }
 	  }, {
-	    key: 'generateEvents',
-	    value: function generateEvents(n) {
-	      var arrival = 0;
-	
-	      for (var i = 0; i < n; i++) {
-	        this.eventQueue.add(new _EventMessage2.default(i, arrival, _Calculus.Distribution.uniform(5, 9), this.rateMessageType(), _Enum.MessageState.RECEPTION, this.config.sfaTaxs));
-	
-	        arrival += _Calculus.Distribution.uniform(7, 12);
-	      }
+	    key: 'generateMessage',
+	    value: function generateMessage() {
+	      var messageType = this.sortMessageType();
+	      var arrive = messageType.charAt(1) === 'L' ? _Calculus.Distribution.expo(this.config.arriveTime.local) : _Calculus.Distribution.expo(this.config.arriveTime.remote);
+	      var message = new _EventMessage2.default(++this.lastMessage.id, this.lastMessage.execTime + arrive, _Calculus.Distribution.uniform(5, 9), messageType, _Enum.MessageState.RECEPTION, this.config.sfaTaxs);
+	      this.eventQueue.add(message);
+	      this.lastMessage = message;
 	    }
 	  }, {
 	    key: 'start',
 	    value: function start() {
-	      this.generateEvents(5);
+	      this.lastMessage = new _EventMessage2.default(0, 0, _Calculus.Distribution.uniform(5, 9), this.sortMessageType(), _Enum.MessageState.RECEPTION, this.config.sfaTaxs);
 	
+	      this.eventQueue.add(this.lastMessage);
 	      this.run();
 	    }
 	  }, {
@@ -235,20 +234,25 @@
 	    value: function run() {
 	      var _this = this;
 	
-	      if (this.eventQueue.isEmpty()) {
+	      if (this.eventQueue.isEmpty() || this.currentTime > 1000) {
 	        this.finish();
 	
 	        return;
 	      }
 	
+	      this.generateMessage();
+	
 	      var nextEvent = this.eventQueue.next();
+	      this.currentTime = nextEvent.execTime;
 	
 	      nextEvent.run(this.receptionCenter, this.localServiceCenter, this.remoteServiceCenter);
 	
 	      setTimeout(function () {
-	        console.log('execTime: ' + nextEvent.execTime + ' msgId: ' + nextEvent.id + ' state: ' + nextEvent.state + ' type: ' + nextEvent.type);
+	        var simLog = 'ID: ' + nextEvent.id + ' Estado: ' + nextEvent.state + ' Tipo: ' + nextEvent.type;
+	
+	        $('#simulation').append('<option>' + simLog + '</option>');
 	        _this.run();
-	      }, 1000);
+	      }, 100);
 	    }
 	  }, {
 	    key: 'finish',
@@ -308,14 +312,20 @@
 	        } else {
 	          remoteServiceCenter.receive(this);
 	        }
-	      } else if (this.state === _Enum.MessageState.FINISH) {}
+	      } else if (this.state === _Enum.MessageState.FINISH) {
+	        if (this.type === _Enum.MessageType.LL || this.type === _Enum.MessageType.RL) {
+	          localServiceCenter.finish(this);
+	        } else {
+	          remoteServiceCenter.finish(this);
+	        }
+	      }
 	    }
 	  }, {
 	    key: 'rate',
 	    value: function rate() {
-	      var success = 0;
-	      var failure = 0;
-	      var delay = 0;
+	      var success = 0,
+	          failure = 0,
+	          delay = 0;
 	
 	      if (this.type === _Enum.MessageType.LL) {
 	        success = this.statusRate.success.ll;
@@ -340,11 +350,11 @@
 	
 	      var rand = Math.random() * 100;
 	
-	      if (rand < success) {
+	      if (rand <= success) {
 	        return _Enum.MessageStatus.SUCCESS;
-	      } else if (rand >= success && rand < success + failure) {
+	      } else if (rand <= success + failure) {
 	        return _Enum.MessageStatus.FAILURE;
-	      } else if (rand >= success + failure && rand < success + failure + delay) {
+	      } else if (rand <= success + failure + delay) {
 	        return _Enum.MessageStatus.DELAY;
 	      }
 	    }
@@ -465,19 +475,45 @@
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 	
 	var ServiceCenter = function () {
-	  function ServiceCenter(eventQueue) {
+	  function ServiceCenter(eventQueue, servers) {
 	    _classCallCheck(this, ServiceCenter);
 	
 	    this.eventQueue = eventQueue;
+	    this.servers = servers;
+	    this.busyServers = 0;
 	    this.success = 0;
 	    this.failure = 0;
 	    this.delay = 0;
+	    this.waitingQueue = new Array();
 	  }
 	
 	  _createClass(ServiceCenter, [{
 	    key: 'receive',
 	    value: function receive(eventMessage) {
+	      if (this.busyServers < this.servers) {
+	        this.eventQueue.add(new _EventMessage2.default(eventMessage.id, eventMessage.servTime + eventMessage.execTime, eventMessage.servTime, eventMessage.type, _Enum.MessageState.FINISH, eventMessage.statusRate));
+	        this.busyServers++;
+	      } else {
+	        this.waitingQueue.push(eventMessage);
+	      }
+	    }
+	  }, {
+	    key: 'finish',
+	    value: function finish(eventMessage) {
 	      var status = eventMessage.rate();
+	
+	      this.busyServers--;
+	
+	      if (this.waitingQueue.length > 0) {
+	        var next = this.nextWaitingQueue();
+	        this.eventQueue.add(new _EventMessage2.default(next.id, eventMessage.execTime + next.servTime, next.servTime, next.type, _Enum.MessageState.FINISH, next.statusRate));
+	        this.busyServers++;
+	      }
+	
+	      if (status === _Enum.MessageStatus.DELAY) {
+	        this.delayMessage(eventMessage);
+	        return;
+	      }
 	
 	      if (status === _Enum.MessageStatus.SUCCESS) {
 	        this.success++;
@@ -485,15 +521,17 @@
 	      if (status === _Enum.MessageStatus.FAILURE) {
 	        this.failure++;
 	      }
-	      if (status === _Enum.MessageStatus.DELAY) {
-	        this.delay++;
-	
-	        this.eventQueue.add(new _EventMessage2.default(eventMessage.id, eventMessage.servTime + eventMessage.execTime, eventMessage.servTime, eventMessage.type, _Enum.MessageState.SERVICE, eventMessage.statusRate));
-	
-	        return;
-	      }
-	
-	      this.eventQueue.add(new _EventMessage2.default(eventMessage.id, eventMessage.servTime + eventMessage.execTime, 0, eventMessage.type, _Enum.MessageState.FINISH));
+	    }
+	  }, {
+	    key: 'delayMessage',
+	    value: function delayMessage(eventMessage) {
+	      this.delay++;
+	      this.eventQueue.add(new _EventMessage2.default(eventMessage.id, eventMessage.execTime, eventMessage.servTime, eventMessage.type, _Enum.MessageState.SERVICE, eventMessage.statusRate));
+	    }
+	  }, {
+	    key: 'nextWaitingQueue',
+	    value: function nextWaitingQueue() {
+	      return this.waitingQueue.shift();
 	    }
 	  }]);
 	
@@ -577,7 +615,7 @@
 	      return a + Math.sqrt(u * (b - a) * (c - a));
 	    }
 	
-	    return a - Math.sqrt((1 - u) * (c - b) * (c - a));
+	    return c - Math.sqrt((1 - u) * (c - b) * (c - a));
 	  },
 	  expo: function expo(l) {
 	    var u = Math.random();
