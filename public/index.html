@@ -186,8 +186,7 @@
               <div class="element">
                 <div class="panel panel-default">
                   <div class="panel-body">
-                    <button class="btn btn-default" id='alert'>Aplicar Configurações</button>
-                    <button class="btn btn-default" id='log'>Resetar </button>
+                    <button class="btn btn-default" id='alert'>Iniciar Simulacao</button>
                   </div>
                 </div>
               </div>
@@ -242,6 +241,36 @@
                           <input type="text" class="form-control input-sm" id="arriveTime2" value="0.5">
                         </div>
                       </form>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="element">
+                <div class="panel panel-default">
+                  <div class="panel-heading">
+                    <h3 class="panel-title">Configuracoes</h3>
+                  </div>
+                  <div class="panel-body">
+                    <p> Velocidade da Simulacao </p>
+                    <div class="element">
+                      <div class="radio">
+                        <label>
+                          <input type="radio" name="optionsRadio" id="slow" value="slow">
+                          Lenta
+                        </label>
+                      </div>
+                      <div class="radio">
+                        <label>
+                          <input type="radio" name="optionsRadio" id="med" value="med" checked>
+                          Media
+                        </label>
+                      </div>
+                      <div class="radio">
+                        <label>
+                          <input type="radio" name="optionsRadio" id="fast" value="fast">
+                          Rapida
+                        </label>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -467,7 +496,7 @@
               <div class="element">
                 <div class="panel panel-default">
                   <div class="panel-heading">
-                    <h3 class="panel-title">Acompanhamento da Simulacao</h3>
+                    <h3 class="panel-title">Log de Eventos</h3>
                   </div>
                   <div class="panel-body">
                     <select multiple class="form-control" id="simulation">
@@ -481,18 +510,95 @@
               <div class="element">
                 <div class="panel panel-default">
                   <div class="panel-heading">
-                    <h3 class="panel-title">Variaveis do Sistema</h3>
+                    <h3 class="panel-title"> Acompanhamento Estatistico </h3>
                   </div>
                   <div class="panel-body">
-                    <div class="progress">
-                      <div class="progress-bar" id="time" role="progressbar" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" style="min-width: 0em; width: 0%;">
-                      </div>
-                    </div>
+                    <ul class="list-group">
+                      <li class="list-group-item">
+                      <span class="badge" id="currentTime">0</span>
+                      Tempo Atual:
+                      </li>
+                      <li class="list-group-item">
+                      <span class="badge" id="inMessages">0</span>
+                      Mensagens Entraram
+                      </li>
+                      <li class="list-group-item">
+                      <span class="badge" id="outMessages">0</span>
+                      Mensagens Sairam
+                      </li>
+                      <li class="list-group-item">
+                      <span class="badge" id="actualMessages">0</span>
+                      Mensagens no Sistema
+                      </li>
+                      <li class="list-group-item">
+                      <span class="badge" id="events">0</span>
+                      Eventos Executados
+                      </li>
+                      <li class="list-group-item">
+                      <span class="badge" id="ocpLocal">0</span>
+                      Servidor Ocp. Local
+                      </li>
+                      <li class="list-group-item">
+                      <span class="badge" id="ocpRemote">0</span>
+                      Servidor Ocp. Remoto
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="column">
+              <div class="element">
+                <div class="panel panel-default">
+                  <div class="panel-heading">
+                    <h3 class="panel-title">Caracteristicas Das Mensages</h3>
+                  </div>
+                  <div class="panel-body">
+                    <ul class="list-group">
+                      <li class="list-group-item">
+                      <span class="badge" id="successMessages">0</span>
+                      Sucesso
+                      </li>
+                      <li class="list-group-item">
+                      <span class="badge" id="failedMessages">0</span>
+                      Falhas
+                      </li>
+                      <li class="list-group-item">
+                      <span class="badge" id="delayedMessages">0</span>
+                      Adiadas
+                      </li>
+                      <li class="list-group-item">
+                      <span class="badge" id="llMessages">0</span>
+                      Local -> Local
+                      </li>
+                      <li class="list-group-item">
+                      <span class="badge" id="lrMessages">0</span>
+                      Local -> Remota
+                      </li>
+                      <li class="list-group-item">
+                      <span class="badge" id="rlMessages">0</span>
+                      Remota -> Local
+                      </li>
+                      <li class="list-group-item">
+                      <span class="badge" id="rrMessages">0</span>
+                      Remota -> Remota
+                      </li>
+                    </ul>
                   </div>
                 </div>
               </div>
             </div>
           </div>
+        </div>
+        <div class="element">
+          <!-- Standard button -->
+          <button type="button" class="btn btn-primary" id="pause">
+            <span class="glyphicon glyphicon-play" aria-hidden="true"></span>
+            <span class="glyphicon glyphicon-pause" aria-hidden="true"></span>
+          </button>
+          <button type="button" class="btn btn-warning" id="stop">
+            <span class="glyphicon glyphicon-stop" aria-hidden="true"></span>
+          </button>
         </div>
       </div>
       <!-- End Simulation Panel -->

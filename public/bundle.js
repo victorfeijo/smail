@@ -140,6 +140,14 @@
 	$('#alert').click(function () {
 	  var config = new _SimulatorConfig2.default(trafficVolumn(), sfaTaxs(), serviceCenter(), arriveTime(), serviceTime());
 	  var sim = new _Simulator2.default(config);
+	  $('#pause').click(function () {
+	    sim.stop();
+	  });
+	
+	  $('#stop').click(function () {
+	    sim.finish();
+	  });
+	
 	  sim.start();
 	});
 
@@ -189,6 +197,15 @@
 	    this.remoteServiceCenter = new _ServiceCenter2.default(this.eventQueue, this.config.serviceCenter.center2);
 	    this.receptionCenter = new _Reception2.default(this.eventQueue);
 	    this.currentTime = 0;
+	    this.inMessages = 0;
+	    this.outMessages = 0;
+	    this.ll = 0;
+	    this.lr = 0;
+	    this.rl = 0;
+	    this.rr = 0;
+	    this.eventsCount = 0;
+	    this.speed = 100;
+	    this.stopped = false;
 	  }
 	
 	  // Big method because theres a lot of options to choose on users interface
@@ -292,6 +309,29 @@
 	      this.lastMessage = message;
 	    }
 	  }, {
+	    key: 'stop',
+	    value: function stop() {
+	      this.stopped = !this.stopped;
+	
+	      if (!this.stopped) {
+	        this.run();
+	      }
+	    }
+	  }, {
+	    key: 'updateSpeed',
+	    value: function updateSpeed() {
+	      var speed = $('input[name=optionsRadio]:checked').val();
+	      if (speed === 'slow') {
+	        this.speed = 1000;
+	      }
+	      if (speed === 'med') {
+	        this.speed = 100;
+	      }
+	      if (speed === 'fast') {
+	        this.speed = 10;
+	      }
+	    }
+	  }, {
 	    key: 'start',
 	    value: function start() {
 	      var messageType = _Calculus.Sort.messageType(this.config.trafficVolumn);
@@ -300,6 +340,8 @@
 	      this.lastMessage = new _EventMessage2.default(0, 0, _Calculus.Distribution.uniform(2, 4), _Calculus.Distribution.uniform(5, 9), messageType, messageStatus, this.config.sfaTaxs, _Enum.MessageState.RECEPTION);
 	
 	      this.eventQueue.add(this.lastMessage);
+	      this.inMessages++;
+	      this.updateSpeed();
 	      this.run();
 	    }
 	  }, {
@@ -307,33 +349,60 @@
 	    value: function run() {
 	      var _this = this;
 	
-	      if (this.eventQueue.isEmpty() || this.currentTime > 1000) {
+	      if (this.eventQueue.isEmpty()) {
 	        this.finish();
 	
 	        return;
 	      }
-	
 	      this.generateMessage();
 	
 	      var nextEvent = this.eventQueue.next();
 	      this.currentTime = nextEvent.execTime;
+	      this.eventsCount++;
+	
+	      if (nextEvent.state === _Enum.MessageState.FINISH && nextEvent.status !== _Enum.MessageStatus.DELAY) {
+	        this.outMessages++;
+	      }
+	      if (nextEvent.state === _Enum.MessageState.RECEPTION) {
+	        this.inMessages++;
+	      }
 	
 	      nextEvent.run(this.receptionCenter, this.localServiceCenter, this.remoteServiceCenter);
 	
 	      setTimeout(function () {
-	        var simLog = 'ID: ' + nextEvent.id + ' Estado: ' + nextEvent.state + ' Tipo: ' + nextEvent.type + ' Status: ' + nextEvent.status;
+	        var simLog = 'Mensagem ID: ' + nextEvent.id + ' Estado: ' + nextEvent.state + ' Tipo: ' + nextEvent.type + ' Status: ' + nextEvent.status;
 	
 	        $('#simulation').append('<option>' + simLog + '</option>');
 	
-	        var percent = parseInt(nextEvent.execTime / 10) + '%';
-	        $('#time').css('width', percent);
+	        $('#currentTime').html(nextEvent.execTime.toFixed(3));
+	        $('#inMessages').html(_this.inMessages);
+	        $('#outMessages').html(_this.outMessages);
+	        $('#actualMessages').html(_this.inMessages - _this.outMessages);
+	        $('#events').html(_this.eventsCount);
+	        $('#ocpLocal').html(_this.localServiceCenter.busyServers);
+	        $('#ocpRemote').html(_this.remoteServiceCenter.busyServers);
 	
-	        _this.run();
-	      }, 1);
+	        $('#successMessages').html(_this.localServiceCenter.success + _this.remoteServiceCenter.success);
+	        $('#failedMessages').html(_this.localServiceCenter.failure + _this.remoteServiceCenter.failure);
+	        $('#delayedMessages').html(_this.localServiceCenter.delay + _this.remoteServiceCenter.delay);
+	        $('#llMessages').html(_this.ll);
+	        $('#lrMessages').html(_this.lr);
+	        $('#rlMessages').html(_this.rl);
+	        $('#rrMessages').html(_this.rr);
+	
+	        $('#time').css('width', parseInt(nextEvent.execTime / 10) + '%');
+	
+	        if (!_this.stopped) {
+	          _this.run();
+	        }
+	      }, this.speed);
 	    }
 	  }, {
 	    key: 'finish',
 	    value: function finish() {
+	      // just to make share that will stop the sim
+	      this.eventQueue = new _EventQueue2.default();
+	
 	      console.log('local -> success: ' + this.localServiceCenter.success + ' failure: ' + this.localServiceCenter.failure + ' delay: ' + this.localServiceCenter.delay);
 	      console.log('remote -> success: ' + this.remoteServiceCenter.success + ' failure: ' + this.remoteServiceCenter.failure + ' delay: ' + this.remoteServiceCenter.delay);
 	    }

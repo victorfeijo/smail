@@ -88,5 +88,13 @@ $('#alert').click(() => {
                                      arriveTime(),
                                      serviceTime())
   let sim = new Simulator(config)
+  $('#pause').click(() => {
+    sim.stop()
+  })
+
+  $('#stop').click(() => {
+    sim.finish()
+  })
+
   sim.start()
 })

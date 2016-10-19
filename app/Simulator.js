@@ -13,6 +13,15 @@ class Simulator {
     this.remoteServiceCenter = new ServiceCenter(this.eventQueue, this.config.serviceCenter.center2)
     this.receptionCenter = new Reception(this.eventQueue)
     this.currentTime = 0
+    this.inMessages = 0
+    this.outMessages = 0
+    this.ll = 0
+    this.lr = 0
+    this.rl = 0
+    this.rr = 0
+    this.eventsCount = 0
+    this.speed = 100
+    this.stopped = false
   }
 
   // Big method because theres a lot of options to choose on users interface
@@ -118,6 +127,19 @@ class Simulator {
     this.lastMessage = message
   }
 
+  stop() {
+    this.stopped = !this.stopped
+
+    if (!this.stopped) { this.run () }
+  }
+
+  updateSpeed() {
+    const speed = $('input[name=optionsRadio]:checked').val()
+    if (speed === 'slow') { this.speed = 1000 }
+    if (speed === 'med') { this.speed = 100 }
+    if (speed === 'fast') { this.speed = 10 }
+  }
+
   start() {
    const messageType = Sort.messageType(this.config.trafficVolumn)
    const messageStatus = Sort.messageStatus(this.config.sfaTaxs, messageType)
@@ -132,38 +154,61 @@ class Simulator {
                                        MessageState.RECEPTION)
 
    this.eventQueue.add(this.lastMessage)
+   this.inMessages++
+   this.updateSpeed()
    this.run()
   }
 
   run() {
-    if(this.eventQueue.isEmpty() || this.currentTime > 1000) {
+    if (this.eventQueue.isEmpty()) {
       this.finish()
 
       return
     }
-
     this.generateMessage()
 
     let nextEvent = this.eventQueue.next()
     this.currentTime = nextEvent.execTime
+    this.eventsCount++
+
+    if (nextEvent.state === MessageState.FINISH && nextEvent.status !== MessageStatus.DELAY) { this.outMessages++ }
+    if (nextEvent.state === MessageState.RECEPTION) { this.inMessages++ }
 
     nextEvent.run(this.receptionCenter,
                   this.localServiceCenter,
                   this.remoteServiceCenter)
 
     setTimeout(() => {
-      let simLog = `ID: ${nextEvent.id} Estado: ${nextEvent.state} Tipo: ${nextEvent.type} Status: ${nextEvent.status}`
+      let simLog = `Mensagem ID: ${nextEvent.id} Estado: ${nextEvent.state} Tipo: ${nextEvent.type} Status: ${nextEvent.status}`
 
       $('#simulation').append(`<option>${simLog}</option>`)
 
-      let percent = `${parseInt(nextEvent.execTime/10)}%`
-      $('#time').css('width', percent)
+      $('#currentTime').html(nextEvent.execTime.toFixed(3))
+      $('#inMessages').html(this.inMessages)
+      $('#outMessages').html(this.outMessages)
+      $('#actualMessages').html(this.inMessages - this.outMessages)
+      $('#events').html(this.eventsCount)
+      $('#ocpLocal').html(this.localServiceCenter.busyServers)
+      $('#ocpRemote').html(this.remoteServiceCenter.busyServers)
 
-      this.run()
-    }, 1)
+      $('#successMessages').html(this.localServiceCenter.success + this.remoteServiceCenter.success)
+      $('#failedMessages').html(this.localServiceCenter.failure + this.remoteServiceCenter.failure)
+      $('#delayedMessages').html(this.localServiceCenter.delay + this.remoteServiceCenter.delay)
+      $('#llMessages').html(this.ll)
+      $('#lrMessages').html(this.lr)
+      $('#rlMessages').html(this.rl)
+      $('#rrMessages').html(this.rr)
+
+      $('#time').css('width', `${parseInt(nextEvent.execTime/10)}%`)
+
+      if (!this.stopped) { this.run() }
+    }, this.speed)
   }
 
   finish() {
+    // just to make share that will stop the sim
+    this.eventQueue = new EventQueue()
+
     console.log(`local -> success: ${this.localServiceCenter.success} failure: ${this.localServiceCenter.failure} delay: ${this.localServiceCenter.delay}`)
     console.log(`remote -> success: ${this.remoteServiceCenter.success} failure: ${this.remoteServiceCenter.failure} delay: ${this.remoteServiceCenter.delay}`)
   }
