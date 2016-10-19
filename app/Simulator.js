@@ -109,6 +109,7 @@ class Simulator {
     }
   }
 
+  // Creates one message, sorting the type, status and creating times based on then
   generateMessage() {
     const messageType = Sort.messageType(this.config.trafficVolumn)
     const messageStatus = Sort.messageStatus(this.config.sfaTaxs, messageType)
@@ -127,12 +128,14 @@ class Simulator {
     this.lastMessage = message
   }
 
+  // call when tap the stop/play button
   stop() {
     this.stopped = !this.stopped
 
     if (!this.stopped) { this.run () }
   }
 
+  // update simulation speed based on radio button checked
   updateSpeed() {
     const speed = $('input[name=optionsRadio]:checked').val()
     if (speed === 'slow') { this.speed = 1000 }
@@ -140,6 +143,7 @@ class Simulator {
     if (speed === 'fast') { this.speed = 10 }
   }
 
+  // create the initial message, init run simulation
   start() {
    const messageType = Sort.messageType(this.config.trafficVolumn)
    const messageStatus = Sort.messageStatus(this.config.sfaTaxs, messageType)
@@ -159,6 +163,7 @@ class Simulator {
    this.run()
   }
 
+  // recursive run method, takes the next event and run, update the view
   run() {
     if (this.eventQueue.isEmpty()) {
       this.finish()

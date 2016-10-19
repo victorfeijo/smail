@@ -296,6 +296,9 @@
 	        }
 	      }
 	    }
+	
+	    // Creates one message, sorting the type, status and creating times based on then
+	
 	  }, {
 	    key: 'generateMessage',
 	    value: function generateMessage() {
@@ -308,6 +311,9 @@
 	      this.eventQueue.add(message);
 	      this.lastMessage = message;
 	    }
+	
+	    // call when tap the stop/play button
+	
 	  }, {
 	    key: 'stop',
 	    value: function stop() {
@@ -317,6 +323,9 @@
 	        this.run();
 	      }
 	    }
+	
+	    // update simulation speed based on radio button checked
+	
 	  }, {
 	    key: 'updateSpeed',
 	    value: function updateSpeed() {
@@ -331,6 +340,9 @@
 	        this.speed = 10;
 	      }
 	    }
+	
+	    // create the initial message, init run simulation
+	
 	  }, {
 	    key: 'start',
 	    value: function start() {
@@ -344,6 +356,9 @@
 	      this.updateSpeed();
 	      this.run();
 	    }
+	
+	    // recursive run method, takes the next event and run, update the view
+	
 	  }, {
 	    key: 'run',
 	    value: function run() {

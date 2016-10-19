@@ -23,7 +23,7 @@
 
     <div>
       <div class="page-header">
-        <h1><span class="glyphicon glyphicon-envelope" aria-hidden="true"></span> Smail<p><small>Modelagem e simulacao de um servico de email.</small></p></h1>
+        <h1><span class="glyphicon glyphicon-envelope" aria-hidden="true"></span> Smail<p><small>Modelagem e simulação de um serviço de email.</small></p></h1>
       </div>
 
         <!-- Simulation Config Panel -->
@@ -34,7 +34,7 @@
               <div class="element">
                 <div class="panel panel-default">
                   <div class="panel-heading">
-                    <h3 class="panel-title">Volume de Trafego</h3>
+                    <h3 class="panel-title">Volume de Tráfego</h3>
                   </div>
                   <div class="panel-body">
                     <a> Volume em porcentagem (%) </a>
@@ -186,7 +186,7 @@
               <div class="element">
                 <div class="panel panel-default">
                   <div class="panel-body">
-                    <button class="btn btn-default" id='alert'>Iniciar Simulacao</button>
+                    <button class="btn btn-default" id='alert'>Iniciar Simulação</button>
                   </div>
                 </div>
               </div>
@@ -196,7 +196,7 @@
               <div class="element">
                 <div class="panel panel-default">
                   <div class="panel-heading">
-                    <h3 class="panel-title">Centro de Servico</h3>
+                    <h3 class="panel-title">Centro de Serviço</h3>
                   </div>
                   <div class="panel-body">
                     <a> Quantidade de Servidores </a>
@@ -248,7 +248,7 @@
               <div class="element">
                 <div class="panel panel-default">
                   <div class="panel-heading">
-                    <h3 class="panel-title">Configuracoes</h3>
+                    <h3 class="panel-title">Configurações</h3>
                   </div>
                   <div class="panel-body">
                     <p> Velocidade da Simulacao </p>
@@ -281,7 +281,7 @@
               <div class="element">
                 <div class="panel panel-default">
                   <div class="panel-heading">
-                    <h3 class="panel-title">Tempo de Servico (TS)</h3>
+                    <h3 class="panel-title">Tempo de Serviço (TS)</h3>
                   </div>
                   <div class="panel-body">
                     <div class="row">
@@ -505,18 +505,28 @@
                   </div>
                 </div>
               </div>
+              <div class="element">
+                <!-- Standard button -->
+                <button type="button" class="btn btn-primary" id="pause">
+                  <span class="glyphicon glyphicon-play" aria-hidden="true"></span>
+                  <span class="glyphicon glyphicon-pause" aria-hidden="true"></span>
+                </button>
+                <button type="button" class="btn btn-warning" id="stop">
+                  <span class="glyphicon glyphicon-stop" aria-hidden="true"></span>
+                </button>
+              </div>
             </div>
             <div class="column">
               <div class="element">
                 <div class="panel panel-default">
                   <div class="panel-heading">
-                    <h3 class="panel-title"> Acompanhamento Estatistico </h3>
+                    <h3 class="panel-title"> Acompanhamento Estatístico </h3>
                   </div>
                   <div class="panel-body">
                     <ul class="list-group">
                       <li class="list-group-item">
                       <span class="badge" id="currentTime">0</span>
-                      Tempo Atual:
+                      Tempo Atual
                       </li>
                       <li class="list-group-item">
                       <span class="badge" id="inMessages">0</span>
@@ -551,7 +561,7 @@
               <div class="element">
                 <div class="panel panel-default">
                   <div class="panel-heading">
-                    <h3 class="panel-title">Caracteristicas Das Mensages</h3>
+                    <h3 class="panel-title">Propriedades das Mensagens</h3>
                   </div>
                   <div class="panel-body">
                     <ul class="list-group">
@@ -589,16 +599,6 @@
               </div>
             </div>
           </div>
-        </div>
-        <div class="element">
-          <!-- Standard button -->
-          <button type="button" class="btn btn-primary" id="pause">
-            <span class="glyphicon glyphicon-play" aria-hidden="true"></span>
-            <span class="glyphicon glyphicon-pause" aria-hidden="true"></span>
-          </button>
-          <button type="button" class="btn btn-warning" id="stop">
-            <span class="glyphicon glyphicon-stop" aria-hidden="true"></span>
-          </button>
         </div>
       </div>
       <!-- End Simulation Panel -->
