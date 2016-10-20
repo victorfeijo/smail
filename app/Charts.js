@@ -5,27 +5,31 @@ export const Charts = {
       type: 'line',
       data: {
         datasets: [{
-          label: 'Scatter Dataset',
-          data: [{
-            x: -10,
-            y: 0
-          }, {
-            x: 0,
-            y: 10
-          }, {
-            x: 10,
-            y: 5
-          }]
+          label: 'Tempo da Mensagem no Sistema',
+          data: data,
         }]
       },
       options: {
         scales: {
           xAxes: [{
+            scaleLabel: {
+              display: true,
+              labelString: 'Número de Mensagens no Sistema'
+            },
             type: 'linear',
             position: 'bottom'
           }]
         }
       }
     });
+  },
+  parseData: (hash) => {
+    let data = new Array()
+
+    for (let key in hash) {
+      data.push({x: key, y: hash[key]})
+    }
+
+    return data
   }
 }

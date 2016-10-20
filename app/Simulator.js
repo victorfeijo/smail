@@ -275,7 +275,7 @@ class Simulator {
     // just to make share that will stop the sim
     this.eventQueue = new EventQueue()
 
-    Charts.medSysMsg(this.sysMsgTimes)
+    Charts.medSysMsg(Charts.parseData(this.sysMsgTimes))
   }
 }
 
