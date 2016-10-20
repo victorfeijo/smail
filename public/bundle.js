@@ -50,7 +50,7 @@
 	
 	var _Simulator2 = _interopRequireDefault(_Simulator);
 	
-	var _SimulatorConfig = __webpack_require__(8);
+	var _SimulatorConfig = __webpack_require__(9);
 	
 	var _SimulatorConfig2 = _interopRequireDefault(_SimulatorConfig);
 	
@@ -182,6 +182,8 @@
 	var _Calculus = __webpack_require__(6);
 	
 	var _Enum = __webpack_require__(3);
+	
+	var _Charts = __webpack_require__(8);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
@@ -402,8 +404,6 @@
 	      var _this = this;
 	
 	      if (this.eventQueue.isEmpty()) {
-	        this.finish();
-	
 	        return;
 	      }
 	
@@ -486,8 +486,10 @@
 	      // just to make share that will stop the sim
 	      this.eventQueue = new _EventQueue2.default();
 	
-	      console.log('local -> success: ' + this.localServiceCenter.success + ' failure: ' + this.localServiceCenter.failure + ' delay: ' + this.localServiceCenter.delay);
-	      console.log('remote -> success: ' + this.remoteServiceCenter.success + ' failure: ' + this.remoteServiceCenter.failure + ' delay: ' + this.remoteServiceCenter.delay);
+	      _Charts.Charts.medSysMsg(_Charts.Charts.parseData(this.sysMsgTimes));
+	      _Charts.Charts.servTime(_Charts.Charts.parseData(this.localServTimes), _Charts.Charts.parseData(this.remoteServTimes));
+	      _Charts.Charts.sfaPie([this.localServiceCenter.success + this.remoteServiceCenter.success, this.localServiceCenter.failure + this.remoteServiceCenter.failure, this.localServiceCenter.delay + this.remoteServiceCenter.delay]);
+	      _Charts.Charts.typePie([this.ll, this.lr, this.rl, this.rr]);
 	    }
 	  }]);
 	
@@ -969,6 +971,117 @@
 
 /***/ },
 /* 8 */
+/***/ function(module, exports) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	var Charts = exports.Charts = {
+	  medSysMsg: function medSysMsg(data) {
+	    var ctx = document.getElementById("medSysMsgChart");
+	    var myLineChart = new Chart(ctx, {
+	      type: 'line',
+	      data: {
+	        datasets: [{
+	          label: 'Tempo da Mensagem no Sistema',
+	          backgroundColor: "rgba(75,192,192,0.4)",
+	          borderColor: "rgba(75,192,192,1)",
+	          borderCapStyle: 'butt',
+	          data: data
+	        }]
+	      },
+	      options: {
+	        scales: {
+	          xAxes: [{
+	            scaleLabel: {
+	              display: true,
+	              labelString: 'Número de Mensagens no Sistema'
+	            },
+	            type: 'linear',
+	            position: 'bottom'
+	          }]
+	        }
+	      }
+	    });
+	  },
+	  servTime: function servTime(local, remote) {
+	    var ctx = document.getElementById('servTimesChart');
+	    var myLineChart = new Chart(ctx, {
+	      type: 'line',
+	      data: {
+	        datasets: [{
+	          label: 'Tempo Servidor Local',
+	          backgroundColor: "rgba(211,23,23,0.4)",
+	          borderColor: "rgba(211,23,23,1)",
+	          borderCapStyle: 'butt',
+	          data: local
+	        }, {
+	          label: 'Tempo Servidor Remoto',
+	          backgroundColor: "rgba(37,37,202,0.4)",
+	          borderColor: "rgba(37,37,202,1)",
+	          borderCapStyle: 'butt',
+	          data: remote
+	        }]
+	      },
+	      options: {
+	        scales: {
+	          xAxes: [{
+	            scaleLabel: {
+	              display: true,
+	              labelString: 'Número de Servidores'
+	            },
+	            type: 'linear',
+	            position: 'bottom'
+	          }]
+	        }
+	      }
+	    });
+	  },
+	  sfaPie: function sfaPie(data) {
+	    var ctx = document.getElementById("sfaPie");
+	    var myLineChart = new Chart(ctx, {
+	      type: 'pie',
+	      data: {
+	        labels: ['Sucesso', 'Falha', 'Adiantamento'],
+	        datasets: [{
+	          label: 'Taxa de Conclusão ',
+	          backgroundColor: ["rgba(23,211,23,0.5)", "rgba(211,23,211,0.5)", "rgba(23,211,211,0.5)"],
+	          hoverBackgroundColor: ["rgba(23,211,23,0.9)", "rgba(211,23,211,0.9)", "rgba(23,211,211,0.9)"],
+	          data: data
+	        }]
+	      }
+	    });
+	  },
+	  typePie: function typePie(data) {
+	    var ctx = document.getElementById("typePie");
+	    var myLineChart = new Chart(ctx, {
+	      type: 'pie',
+	      data: {
+	        labels: ['LL', 'LR', 'RL', 'RR'],
+	        datasets: [{
+	          label: 'Taxa de Direcionamento',
+	          backgroundColor: ["rgba(211,23,23,0.5)", "rgba(139,71,3,0.5)", "rgba(211,211,23,0.5)", "rgba(23,122,221,0.5)"],
+	          hoverBackgroundColor: ["rgba(211,23,23,0.9)", "rgba(139,71,3,0.9)", "rgba(211,211,23,0.9)", "rgba(23,122,221,0.9)"],
+	          data: data
+	        }]
+	      }
+	    });
+	  },
+	  parseData: function parseData(hash) {
+	    var data = new Array();
+	
+	    for (var key in hash) {
+	      data.push({ x: key, y: hash[key] });
+	    }
+	
+	    return data;
+	  }
+	};
+
+/***/ },
+/* 9 */
 /***/ function(module, exports) {
 
 	"use strict";

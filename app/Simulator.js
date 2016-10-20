@@ -4,6 +4,7 @@ import ServiceCenter from './ServiceCenter'
 import Reception from './Reception'
 import { Distribution, Sort, Statistic, parseDistribution } from './Calculus'
 import { MessageType, MessageState, MessageStatus } from './Enum'
+import { Charts } from './Charts'
 
 class Simulator {
   constructor(config) {
@@ -201,11 +202,7 @@ class Simulator {
 
   // recursive run method, takes the next event and run, update the view
   run() {
-    if (this.eventQueue.isEmpty()) {
-      this.finish()
-
-      return
-    }
+    if (this.eventQueue.isEmpty()) { return }
 
     this.generateMessage()
     let nextEvent = this.eventQueue.next()
@@ -274,8 +271,12 @@ class Simulator {
     // just to make share that will stop the sim
     this.eventQueue = new EventQueue()
 
-    console.log(`local -> success: ${this.localServiceCenter.success} failure: ${this.localServiceCenter.failure} delay: ${this.localServiceCenter.delay}`)
-    console.log(`remote -> success: ${this.remoteServiceCenter.success} failure: ${this.remoteServiceCenter.failure} delay: ${this.remoteServiceCenter.delay}`)
+    Charts.medSysMsg(Charts.parseData(this.sysMsgTimes))
+    Charts.servTime(Charts.parseData(this.localServTimes), Charts.parseData(this.remoteServTimes))
+    Charts.sfaPie([this.localServiceCenter.success + this.remoteServiceCenter.success,
+                   this.localServiceCenter.failure + this.remoteServiceCenter.failure,
+                   this.localServiceCenter.delay + this.remoteServiceCenter.delay,])
+    Charts.typePie([this.ll, this.lr, this.rl, this.rr])
   }
 }
 
