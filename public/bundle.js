@@ -404,8 +404,6 @@
 	      var _this = this;
 	
 	      if (this.eventQueue.isEmpty()) {
-	        this.finish();
-	
 	        return;
 	      }
 	
@@ -489,6 +487,9 @@
 	      this.eventQueue = new _EventQueue2.default();
 	
 	      _Charts.Charts.medSysMsg(_Charts.Charts.parseData(this.sysMsgTimes));
+	      _Charts.Charts.servTime(_Charts.Charts.parseData(this.localServTimes), _Charts.Charts.parseData(this.remoteServTimes));
+	      _Charts.Charts.sfaPie([this.localServiceCenter.success + this.remoteServiceCenter.success, this.localServiceCenter.failure + this.remoteServiceCenter.failure, this.localServiceCenter.delay + this.remoteServiceCenter.delay]);
+	      _Charts.Charts.typePie([this.ll, this.lr, this.rl, this.rr]);
 	    }
 	  }]);
 	
@@ -985,6 +986,9 @@
 	      data: {
 	        datasets: [{
 	          label: 'Tempo da Mensagem no Sistema',
+	          backgroundColor: "rgba(75,192,192,0.4)",
+	          borderColor: "rgba(75,192,192,1)",
+	          borderCapStyle: 'butt',
 	          data: data
 	        }]
 	      },
@@ -1002,6 +1006,69 @@
 	      }
 	    });
 	  },
+	  servTime: function servTime(local, remote) {
+	    var ctx = document.getElementById('servTimesChart');
+	    var myLineChart = new Chart(ctx, {
+	      type: 'line',
+	      data: {
+	        datasets: [{
+	          label: 'Tempo Servidor Local',
+	          backgroundColor: "rgba(211,23,23,0.4)",
+	          borderColor: "rgba(211,23,23,1)",
+	          borderCapStyle: 'butt',
+	          data: local
+	        }, {
+	          label: 'Tempo Servidor Remoto',
+	          backgroundColor: "rgba(37,37,202,0.4)",
+	          borderColor: "rgba(37,37,202,1)",
+	          borderCapStyle: 'butt',
+	          data: remote
+	        }]
+	      },
+	      options: {
+	        scales: {
+	          xAxes: [{
+	            scaleLabel: {
+	              display: true,
+	              labelString: 'Número de Servidores'
+	            },
+	            type: 'linear',
+	            position: 'bottom'
+	          }]
+	        }
+	      }
+	    });
+	  },
+	  sfaPie: function sfaPie(data) {
+	    var ctx = document.getElementById("sfaPie");
+	    var myLineChart = new Chart(ctx, {
+	      type: 'pie',
+	      data: {
+	        labels: ['Sucesso', 'Falha', 'Adiantamento'],
+	        datasets: [{
+	          label: 'Taxa de Conclusão ',
+	          backgroundColor: ["rgba(23,211,23,0.5)", "rgba(211,23,211,0.5)", "rgba(23,211,211,0.5)"],
+	          hoverBackgroundColor: ["rgba(23,211,23,0.9)", "rgba(211,23,211,0.9)", "rgba(23,211,211,0.9)"],
+	          data: data
+	        }]
+	      }
+	    });
+	  },
+	  typePie: function typePie(data) {
+	    var ctx = document.getElementById("typePie");
+	    var myLineChart = new Chart(ctx, {
+	      type: 'pie',
+	      data: {
+	        labels: ['LL', 'LR', 'RL', 'RR'],
+	        datasets: [{
+	          label: 'Taxa de Direcionamento',
+	          backgroundColor: ["rgba(211,23,23,0.5)", "rgba(139,71,3,0.5)", "rgba(211,211,23,0.5)", "rgba(23,122,221,0.5)"],
+	          hoverBackgroundColor: ["rgba(211,23,23,0.9)", "rgba(139,71,3,0.9)", "rgba(211,211,23,0.9)", "rgba(23,122,221,0.9)"],
+	          data: data
+	        }]
+	      }
+	    });
+	  },
 	  parseData: function parseData(hash) {
 	    var data = new Array();
 	
@@ -1009,7 +1076,6 @@
 	      data.push({ x: key, y: hash[key] });
 	    }
 	
-	    console.log(data);
 	    return data;
 	  }
 	};

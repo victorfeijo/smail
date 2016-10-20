@@ -202,11 +202,7 @@ class Simulator {
 
   // recursive run method, takes the next event and run, update the view
   run() {
-    if (this.eventQueue.isEmpty()) {
-      this.finish()
-
-      return
-    }
+    if (this.eventQueue.isEmpty()) { return }
 
     this.generateMessage()
     let nextEvent = this.eventQueue.next()
@@ -276,6 +272,11 @@ class Simulator {
     this.eventQueue = new EventQueue()
 
     Charts.medSysMsg(Charts.parseData(this.sysMsgTimes))
+    Charts.servTime(Charts.parseData(this.localServTimes), Charts.parseData(this.remoteServTimes))
+    Charts.sfaPie([this.localServiceCenter.success + this.remoteServiceCenter.success,
+                   this.localServiceCenter.failure + this.remoteServiceCenter.failure,
+                   this.localServiceCenter.delay + this.remoteServiceCenter.delay,])
+    Charts.typePie([this.ll, this.lr, this.rl, this.rr])
   }
 }
 
