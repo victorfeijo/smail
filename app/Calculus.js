@@ -82,6 +82,36 @@ export const Sort = {
   }
 }
 
+export const Statistic = {
+  min: (list) => {
+    if (list.length === 0) { return 0 }
+
+    return Math.min(...list)
+  },
+  max: (list) => {
+    if (list.length === 0) { return 0 }
+
+    return Math.max(...list)
+  },
+  med: (list) => {
+    if (list.length === 0) { return 0 }
+
+    let sum = 0
+    list.forEach((value, index) => {
+      sum += value
+    })
+    return sum/list.length
+  },
+  medPond: (hash, totalTime) => {
+    let sum = 0
+    for (let key in hash) {
+      sum += (key * hash[key])/totalTime
+    }
+
+    return sum
+  }
+}
+
 export const parseDistribution = (expression) => {
   let match = /(\w+)\((.*)\)/i.exec(expression)
 

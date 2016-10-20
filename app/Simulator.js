@@ -2,7 +2,7 @@ import EventMessage from './EventMessage'
 import EventQueue from './EventQueue'
 import ServiceCenter from './ServiceCenter'
 import Reception from './Reception'
-import { Distribution, Sort, parseDistribution } from './Calculus'
+import { Distribution, Sort, Statistic, parseDistribution } from './Calculus'
 import { MessageType, MessageState, MessageStatus } from './Enum'
 
 class Simulator {
@@ -22,6 +22,8 @@ class Simulator {
     this.eventsCount = 0
     this.speed = 100
     this.stopped = false
+    this.transitTimes = new Array()
+    this.sysMsgTimes = {}
   }
 
   // Big method because theres a lot of options to choose on users interface
@@ -120,12 +122,24 @@ class Simulator {
                                    this.lastMessage.execTime + arrive,
                                    messageTimes.reception,
                                    messageTimes.service,
+                                   this.lastMessage.execTime + arrive,
                                    messageType,
                                    messageStatus,
                                    this.config.sfaTaxs,
                                    MessageState.RECEPTION)
     this.eventQueue.add(message)
     this.lastMessage = message
+  }
+
+  // distribute in a hash table the msg system by the time
+  distributeSysTimes(nextTime) {
+    const currentMessages = this.inMessages - this.outMessages
+    if (this.sysMsgTimes[currentMessages] === undefined) {
+      this.sysMsgTimes[currentMessages] = nextTime - this.currentTime
+    }
+    else {
+      this.sysMsgTimes[currentMessages] += nextTime - this.currentTime
+    }
   }
 
   // call when tap the stop/play button
@@ -147,11 +161,13 @@ class Simulator {
   start() {
    const messageType = Sort.messageType(this.config.trafficVolumn)
    const messageStatus = Sort.messageStatus(this.config.sfaTaxs, messageType)
+   const messageTimes = this.messageTimes(messageType, messageStatus)
 
    this.lastMessage = new EventMessage(0,
                                        0,
-                                       Distribution.uniform(2, 4),
-                                       Distribution.uniform(5, 9),
+                                       messageTimes.reception,
+                                       messageTimes.service,
+                                       0,
                                        messageType,
                                        messageStatus,
                                        this.config.sfaTaxs,
@@ -170,14 +186,28 @@ class Simulator {
 
       return
     }
-    this.generateMessage()
 
+    this.generateMessage()
     let nextEvent = this.eventQueue.next()
+    this.distributeSysTimes(nextEvent.execTime)
     this.currentTime = nextEvent.execTime
     this.eventsCount++
 
-    if (nextEvent.state === MessageState.FINISH && nextEvent.status !== MessageStatus.DELAY) { this.outMessages++ }
-    if (nextEvent.state === MessageState.RECEPTION) { this.inMessages++ }
+    // out messages
+    if (nextEvent.state === MessageState.FINISH && nextEvent.status !== MessageStatus.DELAY) {
+      this.transitTimes.push(this.currentTime - nextEvent.enteredTime)
+      this.outMessages++
+    }
+
+    // in messages
+    if (nextEvent.state === MessageState.RECEPTION) {
+      this.inMessages++
+      if (nextEvent.type === MessageType.LL) { this.ll++ }
+      if (nextEvent.type === MessageType.LR) { this.lr++ }
+      if (nextEvent.type === MessageType.RL) { this.rl++ }
+      if (nextEvent.type === MessageType.RR) { this.rr++ }
+    }
+
 
     nextEvent.run(this.receptionCenter,
                   this.localServiceCenter,
@@ -203,6 +233,14 @@ class Simulator {
       $('#lrMessages').html(this.lr)
       $('#rlMessages').html(this.rl)
       $('#rrMessages').html(this.rr)
+
+      $('#minTransitTime').html(Statistic.min(this.transitTimes).toFixed(3))
+      $('#maxTransitTime').html(Statistic.max(this.transitTimes).toFixed(3))
+      $('#medTransitTime').html(Statistic.med(this.transitTimes).toFixed(3))
+
+      $('#minMsgTime').html(Statistic.min(Object.keys(this.sysMsgTimes).map((v,i) => parseInt(v))))
+      $('#medMsgTime').html(Statistic.medPond(this.sysMsgTimes, this.currentTime).toFixed(3))
+      $('#maxMsgTime').html(Statistic.max(Object.keys(this.sysMsgTimes).map((v,i) => parseInt(v))))
 
       $('#time').css('width', `${parseInt(nextEvent.execTime/10)}%`)
 

@@ -206,6 +206,8 @@
 	    this.eventsCount = 0;
 	    this.speed = 100;
 	    this.stopped = false;
+	    this.transitTimes = new Array();
+	    this.sysMsgTimes = {};
 	  }
 	
 	  // Big method because theres a lot of options to choose on users interface
@@ -307,9 +309,22 @@
 	      var messageTimes = this.messageTimes(messageType, messageStatus);
 	
 	      var arrive = messageType.charAt(1) === 'L' ? _Calculus.Distribution.expo(this.config.arriveTime.local) : _Calculus.Distribution.expo(this.config.arriveTime.remote);
-	      var message = new _EventMessage2.default(++this.lastMessage.id, this.lastMessage.execTime + arrive, messageTimes.reception, messageTimes.service, messageType, messageStatus, this.config.sfaTaxs, _Enum.MessageState.RECEPTION);
+	      var message = new _EventMessage2.default(++this.lastMessage.id, this.lastMessage.execTime + arrive, messageTimes.reception, messageTimes.service, this.lastMessage.execTime + arrive, messageType, messageStatus, this.config.sfaTaxs, _Enum.MessageState.RECEPTION);
 	      this.eventQueue.add(message);
 	      this.lastMessage = message;
+	    }
+	
+	    // distribute in a hash table the msg system by the time
+	
+	  }, {
+	    key: 'distributeSysTimes',
+	    value: function distributeSysTimes(nextTime) {
+	      var currentMessages = this.inMessages - this.outMessages;
+	      if (this.sysMsgTimes[currentMessages] === undefined) {
+	        this.sysMsgTimes[currentMessages] = nextTime - this.currentTime;
+	      } else {
+	        this.sysMsgTimes[currentMessages] += nextTime - this.currentTime;
+	      }
 	    }
 	
 	    // call when tap the stop/play button
@@ -348,8 +363,9 @@
 	    value: function start() {
 	      var messageType = _Calculus.Sort.messageType(this.config.trafficVolumn);
 	      var messageStatus = _Calculus.Sort.messageStatus(this.config.sfaTaxs, messageType);
+	      var messageTimes = this.messageTimes(messageType, messageStatus);
 	
-	      this.lastMessage = new _EventMessage2.default(0, 0, _Calculus.Distribution.uniform(2, 4), _Calculus.Distribution.uniform(5, 9), messageType, messageStatus, this.config.sfaTaxs, _Enum.MessageState.RECEPTION);
+	      this.lastMessage = new _EventMessage2.default(0, 0, messageTimes.reception, messageTimes.service, 0, messageType, messageStatus, this.config.sfaTaxs, _Enum.MessageState.RECEPTION);
 	
 	      this.eventQueue.add(this.lastMessage);
 	      this.inMessages++;
@@ -369,17 +385,34 @@
 	
 	        return;
 	      }
-	      this.generateMessage();
 	
+	      this.generateMessage();
 	      var nextEvent = this.eventQueue.next();
+	      this.distributeSysTimes(nextEvent.execTime);
 	      this.currentTime = nextEvent.execTime;
 	      this.eventsCount++;
 	
+	      // out messages
 	      if (nextEvent.state === _Enum.MessageState.FINISH && nextEvent.status !== _Enum.MessageStatus.DELAY) {
+	        this.transitTimes.push(this.currentTime - nextEvent.enteredTime);
 	        this.outMessages++;
 	      }
+	
+	      // in messages
 	      if (nextEvent.state === _Enum.MessageState.RECEPTION) {
 	        this.inMessages++;
+	        if (nextEvent.type === _Enum.MessageType.LL) {
+	          this.ll++;
+	        }
+	        if (nextEvent.type === _Enum.MessageType.LR) {
+	          this.lr++;
+	        }
+	        if (nextEvent.type === _Enum.MessageType.RL) {
+	          this.rl++;
+	        }
+	        if (nextEvent.type === _Enum.MessageType.RR) {
+	          this.rr++;
+	        }
 	      }
 	
 	      nextEvent.run(this.receptionCenter, this.localServiceCenter, this.remoteServiceCenter);
@@ -404,6 +437,18 @@
 	        $('#lrMessages').html(_this.lr);
 	        $('#rlMessages').html(_this.rl);
 	        $('#rrMessages').html(_this.rr);
+	
+	        $('#minTransitTime').html(_Calculus.Statistic.min(_this.transitTimes).toFixed(3));
+	        $('#maxTransitTime').html(_Calculus.Statistic.max(_this.transitTimes).toFixed(3));
+	        $('#medTransitTime').html(_Calculus.Statistic.med(_this.transitTimes).toFixed(3));
+	
+	        $('#minMsgTime').html(_Calculus.Statistic.min(Object.keys(_this.sysMsgTimes).map(function (v, i) {
+	          return parseInt(v);
+	        })));
+	        $('#medMsgTime').html(_Calculus.Statistic.medPond(_this.sysMsgTimes, _this.currentTime).toFixed(3));
+	        $('#maxMsgTime').html(_Calculus.Statistic.max(Object.keys(_this.sysMsgTimes).map(function (v, i) {
+	          return parseInt(v);
+	        })));
 	
 	        $('#time').css('width', parseInt(nextEvent.execTime / 10) + '%');
 	
@@ -451,13 +496,14 @@
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 	
 	var EventMessage = function () {
-	  function EventMessage(id, execTime, recepTime, servTime, type, status, sfaTaxs, state) {
+	  function EventMessage(id, execTime, recepTime, servTime, enteredTime, type, status, sfaTaxs, state) {
 	    _classCallCheck(this, EventMessage);
 	
 	    this.id = id;
 	    this.execTime = execTime;
 	    this.recepTime = recepTime;
 	    this.servTime = servTime;
+	    this.enteredTime = enteredTime;
 	    this.type = type;
 	    this.status = status;
 	    this.sfaTaxs = sfaTaxs;
@@ -624,7 +670,7 @@
 	    key: 'receive',
 	    value: function receive(eventMessage) {
 	      if (this.busyServers < this.servers) {
-	        this.eventQueue.add(new _EventMessage2.default(eventMessage.id, eventMessage.execTime + eventMessage.servTime, eventMessage.recepTime, eventMessage.servTime, eventMessage.type, eventMessage.status, eventMessage.sfaTaxs, _Enum.MessageState.FINISH));
+	        this.eventQueue.add(new _EventMessage2.default(eventMessage.id, eventMessage.execTime + eventMessage.servTime, eventMessage.recepTime, eventMessage.servTime, eventMessage.enteredTime, eventMessage.type, eventMessage.status, eventMessage.sfaTaxs, _Enum.MessageState.FINISH));
 	        this.busyServers++;
 	      } else {
 	        this.waitingQueue.push(eventMessage);
@@ -637,7 +683,7 @@
 	
 	      if (this.waitingQueue.length > 0) {
 	        var next = this.nextWaitingQueue();
-	        this.eventQueue.add(new _EventMessage2.default(next.id, eventMessage.execTime + next.servTime, next.recepTime, next.servTime, next.type, next.status, next.sfaTaxs, _Enum.MessageState.FINISH));
+	        this.eventQueue.add(new _EventMessage2.default(next.id, eventMessage.execTime + next.servTime, next.recepTime, next.servTime, next.enteredTime, next.type, next.status, next.sfaTaxs, _Enum.MessageState.FINISH));
 	        this.busyServers++;
 	      }
 	
@@ -659,7 +705,7 @@
 	      this.delay++;
 	      var status = _Calculus.Sort.messageStatus(eventMessage.sfaTaxs, eventMessage.type);
 	
-	      var delayed = new _EventMessage2.default(eventMessage.id, eventMessage.execTime, eventMessage.recepTime, eventMessage.servTime, eventMessage.type, status, eventMessage.sfaTaxs, _Enum.MessageState.SERVICE);
+	      var delayed = new _EventMessage2.default(eventMessage.id, eventMessage.execTime, eventMessage.recepTime, eventMessage.servTime, eventMessage.enteredTime, eventMessage.type, status, eventMessage.sfaTaxs, _Enum.MessageState.SERVICE);
 	
 	      this.eventQueue.add(delayed);
 	    }
@@ -684,9 +730,11 @@
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
-	exports.parseDistribution = exports.Sort = exports.Distribution = undefined;
+	exports.parseDistribution = exports.Statistic = exports.Sort = exports.Distribution = undefined;
 	
 	var _Enum = __webpack_require__(3);
+	
+	function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 	
 	var Distribution = exports.Distribution = {
 	  normal: function normal(a, b) {
@@ -776,6 +824,42 @@
 	  }
 	};
 	
+	var Statistic = exports.Statistic = {
+	  min: function min(list) {
+	    if (list.length === 0) {
+	      return 0;
+	    }
+	
+	    return Math.min.apply(Math, _toConsumableArray(list));
+	  },
+	  max: function max(list) {
+	    if (list.length === 0) {
+	      return 0;
+	    }
+	
+	    return Math.max.apply(Math, _toConsumableArray(list));
+	  },
+	  med: function med(list) {
+	    if (list.length === 0) {
+	      return 0;
+	    }
+	
+	    var sum = 0;
+	    list.forEach(function (value, index) {
+	      sum += value;
+	    });
+	    return sum / list.length;
+	  },
+	  medPond: function medPond(hash, totalTime) {
+	    var sum = 0;
+	    for (var key in hash) {
+	      sum += key * hash[key] / totalTime;
+	    }
+	
+	    return sum;
+	  }
+	};
+	
 	var parseDistribution = exports.parseDistribution = function parseDistribution(expression) {
 	  var match = /(\w+)\((.*)\)/i.exec(expression);
 	
@@ -851,7 +935,7 @@
 	  _createClass(Reception, [{
 	    key: 'receive',
 	    value: function receive(eventMessage) {
-	      this.eventQueue.add(new _EventMessage2.default(eventMessage.id, eventMessage.execTime + eventMessage.recepTime, eventMessage.recepTime, eventMessage.servTime, eventMessage.type, eventMessage.status, eventMessage.sfaTaxs, _Enum.MessageState.SERVICE));
+	      this.eventQueue.add(new _EventMessage2.default(eventMessage.id, eventMessage.execTime + eventMessage.recepTime, eventMessage.recepTime, eventMessage.servTime, eventMessage.enteredTime, eventMessage.type, eventMessage.status, eventMessage.sfaTaxs, _Enum.MessageState.SERVICE));
 	    }
 	  }]);
 	

@@ -12,6 +12,7 @@ class Reception {
                                          eventMessage.execTime + eventMessage.recepTime,
                                          eventMessage.recepTime,
                                          eventMessage.servTime,
+                                         eventMessage.enteredTime,
                                          eventMessage.type,
                                          eventMessage.status,
                                          eventMessage.sfaTaxs,

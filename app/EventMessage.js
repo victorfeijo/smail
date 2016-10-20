@@ -2,11 +2,12 @@ import { MessageState, MessageType, MessageStatus } from './Enum'
 import EventQueue from './EventQueue'
 
 class EventMessage {
-  constructor(id, execTime, recepTime, servTime, type, status, sfaTaxs, state) {
+  constructor(id, execTime, recepTime, servTime, enteredTime, type, status, sfaTaxs, state) {
     this.id = id
     this.execTime = execTime
     this.recepTime = recepTime
     this.servTime = servTime
+    this.enteredTime = enteredTime
     this.type = type
     this.status = status
     this.sfaTaxs = sfaTaxs
