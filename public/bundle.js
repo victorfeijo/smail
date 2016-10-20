@@ -50,7 +50,7 @@
 	
 	var _Simulator2 = _interopRequireDefault(_Simulator);
 	
-	var _SimulatorConfig = __webpack_require__(8);
+	var _SimulatorConfig = __webpack_require__(9);
 	
 	var _SimulatorConfig2 = _interopRequireDefault(_SimulatorConfig);
 	
@@ -182,6 +182,8 @@
 	var _Calculus = __webpack_require__(6);
 	
 	var _Enum = __webpack_require__(3);
+	
+	var _Charts = __webpack_require__(8);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
@@ -486,8 +488,7 @@
 	      // just to make share that will stop the sim
 	      this.eventQueue = new _EventQueue2.default();
 	
-	      console.log('local -> success: ' + this.localServiceCenter.success + ' failure: ' + this.localServiceCenter.failure + ' delay: ' + this.localServiceCenter.delay);
-	      console.log('remote -> success: ' + this.remoteServiceCenter.success + ' failure: ' + this.remoteServiceCenter.failure + ' delay: ' + this.remoteServiceCenter.delay);
+	      _Charts.Charts.medSysMsg(this.sysMsgTimes);
 	    }
 	  }]);
 	
@@ -969,6 +970,47 @@
 
 /***/ },
 /* 8 */
+/***/ function(module, exports) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	var Charts = exports.Charts = {
+	  medSysMsg: function medSysMsg(data) {
+	    var ctx = document.getElementById("medSysMsgChart");
+	    var myLineChart = new Chart(ctx, {
+	      type: 'line',
+	      data: {
+	        datasets: [{
+	          label: 'Scatter Dataset',
+	          data: [{
+	            x: -10,
+	            y: 0
+	          }, {
+	            x: 0,
+	            y: 10
+	          }, {
+	            x: 10,
+	            y: 5
+	          }]
+	        }]
+	      },
+	      options: {
+	        scales: {
+	          xAxes: [{
+	            type: 'linear',
+	            position: 'bottom'
+	          }]
+	        }
+	      }
+	    });
+	  }
+	};
+
+/***/ },
+/* 9 */
 /***/ function(module, exports) {
 
 	"use strict";

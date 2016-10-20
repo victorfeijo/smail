@@ -4,6 +4,7 @@ import ServiceCenter from './ServiceCenter'
 import Reception from './Reception'
 import { Distribution, Sort, Statistic, parseDistribution } from './Calculus'
 import { MessageType, MessageState, MessageStatus } from './Enum'
+import { Charts } from './Charts'
 
 class Simulator {
   constructor(config) {
@@ -274,8 +275,7 @@ class Simulator {
     // just to make share that will stop the sim
     this.eventQueue = new EventQueue()
 
-    console.log(`local -> success: ${this.localServiceCenter.success} failure: ${this.localServiceCenter.failure} delay: ${this.localServiceCenter.delay}`)
-    console.log(`remote -> success: ${this.remoteServiceCenter.success} failure: ${this.remoteServiceCenter.failure} delay: ${this.remoteServiceCenter.delay}`)
+    Charts.medSysMsg(this.sysMsgTimes)
   }
 }
 
