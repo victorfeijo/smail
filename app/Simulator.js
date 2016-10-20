@@ -24,6 +24,8 @@ class Simulator {
     this.stopped = false
     this.transitTimes = new Array()
     this.sysMsgTimes = {}
+    this.localServTimes = {}
+    this.remoteServTimes = {}
   }
 
   // Big method because theres a lot of options to choose on users interface
@@ -142,6 +144,24 @@ class Simulator {
     }
   }
 
+  // distribute in a hash table the serv local/remote by the time
+  distributeServTimes(nextTime) {
+    const currentLocalServ = this.localServiceCenter.busyServers
+    const currentRemoteServ = this.remoteServiceCenter.busyServers
+    if (this.localServTimes[currentLocalServ] === undefined) {
+      this.localServTimes[currentLocalServ] = nextTime - this.currentTime
+    }
+    else {
+      this.localServTimes[currentLocalServ] += nextTime - this.currentTime
+    }
+    if (this.remoteServTimes[currentRemoteServ] === undefined) {
+      this.remoteServTimes[currentRemoteServ] = nextTime - this.currentTime
+    }
+    else {
+      this.remoteServTimes[currentRemoteServ] += nextTime - this.currentTime
+    }
+  }
+
   // call when tap the stop/play button
   stop() {
     this.stopped = !this.stopped
@@ -190,6 +210,7 @@ class Simulator {
     this.generateMessage()
     let nextEvent = this.eventQueue.next()
     this.distributeSysTimes(nextEvent.execTime)
+    this.distributeServTimes(nextEvent.execTime)
     this.currentTime = nextEvent.execTime
     this.eventsCount++
 
@@ -237,10 +258,11 @@ class Simulator {
       $('#minTransitTime').html(Statistic.min(this.transitTimes).toFixed(3))
       $('#maxTransitTime').html(Statistic.max(this.transitTimes).toFixed(3))
       $('#medTransitTime').html(Statistic.med(this.transitTimes).toFixed(3))
-
       $('#minMsgTime').html(Statistic.min(Object.keys(this.sysMsgTimes).map((v,i) => parseInt(v))))
       $('#medMsgTime').html(Statistic.medPond(this.sysMsgTimes, this.currentTime).toFixed(3))
       $('#maxMsgTime').html(Statistic.max(Object.keys(this.sysMsgTimes).map((v,i) => parseInt(v))))
+      $('#medLocalServTime').html(Statistic.medPond(this.localServTimes, this.currentTime).toFixed(3))
+      $('#medRemoteServTime').html(Statistic.medPond(this.remoteServTimes, this.currentTime).toFixed(3))
 
       $('#time').css('width', `${parseInt(nextEvent.execTime/10)}%`)
 

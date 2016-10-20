@@ -208,6 +208,8 @@
 	    this.stopped = false;
 	    this.transitTimes = new Array();
 	    this.sysMsgTimes = {};
+	    this.localServTimes = {};
+	    this.remoteServTimes = {};
 	  }
 	
 	  // Big method because theres a lot of options to choose on users interface
@@ -327,6 +329,25 @@
 	      }
 	    }
 	
+	    // distribute in a hash table the serv local/remote by the time
+	
+	  }, {
+	    key: 'distributeServTimes',
+	    value: function distributeServTimes(nextTime) {
+	      var currentLocalServ = this.localServiceCenter.busyServers;
+	      var currentRemoteServ = this.remoteServiceCenter.busyServers;
+	      if (this.localServTimes[currentLocalServ] === undefined) {
+	        this.localServTimes[currentLocalServ] = nextTime - this.currentTime;
+	      } else {
+	        this.localServTimes[currentLocalServ] += nextTime - this.currentTime;
+	      }
+	      if (this.remoteServTimes[currentRemoteServ] === undefined) {
+	        this.remoteServTimes[currentRemoteServ] = nextTime - this.currentTime;
+	      } else {
+	        this.remoteServTimes[currentRemoteServ] += nextTime - this.currentTime;
+	      }
+	    }
+	
 	    // call when tap the stop/play button
 	
 	  }, {
@@ -389,6 +410,7 @@
 	      this.generateMessage();
 	      var nextEvent = this.eventQueue.next();
 	      this.distributeSysTimes(nextEvent.execTime);
+	      this.distributeServTimes(nextEvent.execTime);
 	      this.currentTime = nextEvent.execTime;
 	      this.eventsCount++;
 	
@@ -441,7 +463,6 @@
 	        $('#minTransitTime').html(_Calculus.Statistic.min(_this.transitTimes).toFixed(3));
 	        $('#maxTransitTime').html(_Calculus.Statistic.max(_this.transitTimes).toFixed(3));
 	        $('#medTransitTime').html(_Calculus.Statistic.med(_this.transitTimes).toFixed(3));
-	
 	        $('#minMsgTime').html(_Calculus.Statistic.min(Object.keys(_this.sysMsgTimes).map(function (v, i) {
 	          return parseInt(v);
 	        })));
@@ -449,6 +470,8 @@
 	        $('#maxMsgTime').html(_Calculus.Statistic.max(Object.keys(_this.sysMsgTimes).map(function (v, i) {
 	          return parseInt(v);
 	        })));
+	        $('#medLocalServTime').html(_Calculus.Statistic.medPond(_this.localServTimes, _this.currentTime).toFixed(3));
+	        $('#medRemoteServTime').html(_Calculus.Statistic.medPond(_this.remoteServTimes, _this.currentTime).toFixed(3));
 	
 	        $('#time').css('width', parseInt(nextEvent.execTime / 10) + '%');
 	
