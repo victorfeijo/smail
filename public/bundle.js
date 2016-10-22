@@ -58,6 +58,7 @@
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
+	// Smooth Scoll
 	$(function () {
 	  $('a[href*="#"]:not([href="#"])').click(function () {
 	    if (location.pathname.replace(/^\//, '') == this.pathname.replace(/^\//, '') && location.hostname == this.hostname) {
@@ -1000,7 +1001,7 @@
 	      type: 'line',
 	      data: {
 	        datasets: [{
-	          label: 'Tempo da Mensagem no Sistema',
+	          label: 'Tempo no Sistema',
 	          backgroundColor: "rgba(75,192,192,0.4)",
 	          borderColor: "rgba(75,192,192,1)",
 	          borderCapStyle: 'butt',

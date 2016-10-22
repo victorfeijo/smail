@@ -5,7 +5,7 @@ export const Charts = {
       type: 'line',
       data: {
         datasets: [{
-          label: 'Tempo da Mensagem no Sistema',
+          label: 'Tempo no Sistema',
           backgroundColor: "rgba(75,192,192,0.4)",
           borderColor: "rgba(75,192,192,1)",
           borderCapStyle: 'butt',
