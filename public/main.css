@@ -28,7 +28,8 @@ body {
   padding-bottom: 8px;
 }
 
-#centralized {
+.centralized {
+  justify-content: center;
 }
 
 #simulation {
